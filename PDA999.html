@@ -1,115 +1,199 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活動報名</title>
-    <!-- LIFF SDK -->
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- Tailwind CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活動報名系統</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body class="bg-gray-100">
-    <!-- 載入中畫面 -->
-    <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-4 rounded-lg">載入中...</div>
+  <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center">
+    <div class="bg-white p-4 rounded-lg">處理中...</div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8">
+    <div id="eventInfo" class="mb-8 bg-white rounded-lg shadow-md p-6">
+      <h1 class="text-2xl font-bold mb-4" id="eventTitle">活動名稱載入中...</h1>
+      <div class="space-y-2">
+        <p id="eventDate">日期：載入中...</p>
+        <p id="eventLocation">地點：載入中...</p>
+        <p id="eventQuota">名額：載入中...</p>
+      </div>
     </div>
 
-    <!-- 主要內容 -->
-    <div id="content" class="container mx-auto px-4 py-8 max-w-md hidden">
-        <!-- 登入狀態 -->
-        <div id="loginStatus" class="bg-white rounded-lg shadow-md p-4 mb-4">
-            <p id="userProfile" class="text-gray-700">尚未登入</p>
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <form id="registrationForm" class="space-y-4">
+        <div>
+          <label class="block text-gray-700">姓名 *</label>
+          <input type="text" id="name" required class="w-full border rounded px-3 py-2">
         </div>
 
-        <!-- 測試按鈕 -->
-        <div class="space-y-4">
-            <button onclick="getUserProfile()" class="w-full bg-blue-500 text-white py-2 rounded-lg">
-                取得用戶資料
-            </button>
-            <button onclick="shareMessage()" class="w-full bg-green-500 text-white py-2 rounded-lg">
-                分享訊息
-            </button>
-            <button onclick="closeLIFF()" class="w-full bg-gray-500 text-white py-2 rounded-lg">
-                關閉 LIFF
-            </button>
+        <div>
+          <label class="block text-gray-700">Email *</label>
+          <input type="email" id="email" required class="w-full border rounded px-3 py-2">
         </div>
+
+        <div>
+          <label class="block text-gray-700">電話 *</label>
+          <input type="tel" id="phone" required class="w-full border rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-gray-700">參加人數 *</label>
+          <input type="number" id="numberOfPeople" min="1" max="10" required class="w-full border rounded px-3 py-2">
+        </div>
+
+        <div>
+          <label class="block text-gray-700">飲食需求</label>
+          <select id="dietaryRequirements" class="w-full border rounded px-3 py-2">
+            <option value="無">無特殊需求</option>
+            <option value="素食">素食</option>
+            <option value="純素">純素</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-gray-700">備註</label>
+          <textarea id="notes" class="w-full border rounded px-3 py-2" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+          送出報名
+        </button>
+      </form>
+
+      <div class="mt-6 space-y-4">
+        <button onclick="sharePage()" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600">
+          分享活動
+        </button>
+        <button onclick="checkStatus()" class="w-full bg-gray-500 text-white py-2 rounded hover:bg-gray-600">
+          查詢報名狀態
+        </button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        // LIFF ID
-        const LIFF_ID = '1656516134-VaGgmaPm'; // 替換成你的 LIFF ID
+  <script>
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbxoJpeFrDKwOvMSPKq2WOEyt8B-gEHpFYJ6veEbvny1aCqXy3GmyfGS9ijbCaAKyCcrJg/exec';
+    let userProfile = null;
 
-        // 顯示/隱藏載入中
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    // LIFF 初始化
+    async function initializeLiff() {
+      try {
+        await liff.init({ liffId: "1656516134-VaGgmaPm" });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          userProfile = await liff.getProfile();
+          loadEventInfo();
         }
+      } catch (err) {
+        console.error('LIFF 初始化失敗', err);
+        alert('初始化失敗，請重新整理頁面');
+      }
+    }
 
-        // 顯示內容
-        function showContent() {
-            document.getElementById('content').classList.remove('hidden');
+    // 載入活動資訊
+    async function loadEventInfo() {
+      try {
+        const response = await fetch(`${GAS_URL}?action=getEventInfo`);
+        const data = await response.json();
+        
+        document.getElementById('eventTitle').textContent = data.name;
+        document.getElementById('eventDate').textContent = `日期：${data.date}`;
+        document.getElementById('eventLocation').textContent = `地點：${data.location}`;
+        document.getElementById('eventQuota').textContent = `名額：${data.quota}`;
+      } catch (error) {
+        console.error('載入活動資訊失敗', error);
+      }
+    }
+
+    // 表單提交處理
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showLoading(true);
+
+      try {
+        const formData = {
+          action: 'register',
+          data: {
+            name: document.getElementById('name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            numberOfPeople: document.getElementById('numberOfPeople').value,
+            dietary: document.getElementById('dietaryRequirements').value,
+            notes: document.getElementById('notes').value,
+            lineId: userProfile.userId
+          }
+        };
+
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert('報名成功！');
+          document.getElementById('registrationForm').reset();
+        } else {
+          alert(result.message || '報名失敗');
         }
+      } catch (error) {
+        console.error('報名失敗', error);
+        alert('報名失敗，請稍後再試');
+      } finally {
+        showLoading(false);
+      }
+    });
 
-        // 初始化 LIFF
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                // 檢查是否登入
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    const profile = await liff.getProfile();
-                    document.getElementById('userProfile').textContent = 
-                        `已登入：${profile.displayName}`;
-                    showContent();
-                }
-            } catch (err) {
-                console.error('LIFF 初始化失敗', err);
-                alert('初始化失敗，請重新整理頁面');
-            } finally {
-                showLoading(false);
+    // 分享功能
+    async function sharePage() {
+      if (liff.isApiAvailable('shareTargetPicker')) {
+        try {
+          await liff.shareTargetPicker([
+            {
+              type: "text",
+              text: `歡迎報名參加我們的活動！\n活動連結：${window.location.href}`
             }
+          ]);
+        } catch (error) {
+          console.error('分享失敗', error);
+          alert('分享失敗，請稍後再試');
         }
+      }
+    }
 
-        // 取得用戶資料
-        async function getUserProfile() {
-            try {
-                const profile = await liff.getProfile();
-                alert(`名稱：${profile.displayName}\nID：${profile.userId}`);
-            } catch (err) {
-                console.error('取得用戶資料失敗', err);
-                alert('取得用戶資料失敗');
-            }
+    // 查詢報名狀態
+    async function checkStatus() {
+      showLoading(true);
+      try {
+        const response = await fetch(`${GAS_URL}?action=checkStatus&lineId=${userProfile.userId}`);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert(`報名狀態：${result.data.status}\n付款狀態：${result.data.payment}`);
+        } else {
+          alert('尚未找到報名紀錄');
         }
+      } catch (error) {
+        console.error('查詢失敗', error);
+        alert('查詢失敗，請稍後再試');
+      } finally {
+        showLoading(false);
+      }
+    }
 
-        // 分享訊息
-        async function shareMessage() {
-            if (liff.isApiAvailable('shareTargetPicker')) {
-                try {
-                    await liff.shareTargetPicker([
-                        {
-                            type: "text",
-                            text: "這是一個測試訊息！"
-                        }
-                    ]);
-                } catch (err) {
-                    console.error('分享失敗', err);
-                    alert('分享失敗');
-                }
-            }
-        }
+    // 顯示/隱藏載入中
+    function showLoading(show) {
+      document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    }
 
-        // 關閉 LIFF
-        function closeLIFF() {
-            if (liff.isInClient()) {
-                liff.closeWindow();
-            } else {
-                alert('這個功能只能在 LINE APP 內使用');
-            }
-        }
-
-        // 頁面載入時初始化
-        window.onload = initializeLiff;
-    </script>
+    // 初始化
+    initializeLiff();
+  </script>
 </body>
 </html>
