@@ -103,36 +103,69 @@
     </div>
 
     <script>
-        const LIFF_ID = "1656516134-VaGgmaPm";
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzGkBdpdo_BbN7WjVQ0mxzOLsHN-tDo7QejCfYfFcaRzR6LnWjF1PBJ2m3dGGGrzbjgSA/exec';
-        let userProfile = null;
+       const GAS_URL = 'https://script.google.com/macros/s/AKfycbzgEtatUGMmKuB4G1Ay_-TaBQ8zoGU13R-PHbztf40jqfuV7b5Qb23g3fo54ahrFJVlVg/exec';
+    let userProfile = null;
 
-        // 顯示/隱藏載入中
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
+    // 修改 LIFF 初始化函數
+    async function initializeLiff() {
+      try {
+        await liff.init({ liffId: "1656516134-VaGgmaPm" });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          userProfile = await liff.getProfile();
+          // 自動填入 LINE 名稱
+          document.getElementById('lineName').value = userProfile.displayName;
+          loadEventInfo();
         }
+      } catch (err) {
+        console.error('LIFF 初始化失敗', err);
+        alert('初始化失敗，請重新整理頁面');
+      }
+    }
 
-        // 顯示錯誤訊息
-        function showError(message) {
-            const errorDiv = document.getElementById('error');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-        }
+    // 修改表單提交處理
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showLoading(true);
 
-        // 初始化 LIFF
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    userProfile = await liff.getProfile();
-                    loadEventInfo();
-                }
-            } catch (err) {
-                showError('LIFF 初始化失敗: ' + err.message);
-            }
+      try {
+        const formData = {
+          action: 'register',
+          data: {
+            name: document.getElementById('name').value,
+            lineName: userProfile.displayName, // 直接使用 LIFF 的顯示名稱
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            numberOfPeople: document.getElementById('numberOfPeople').value,
+            dietary: document.getElementById('dietaryRequirements').value,
+            notes: document.getElementById('notes').value,
+            lineId: userProfile.userId
+          }
+        };
+
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alert('報名成功！');
+          document.getElementById('registrationForm').reset();
+          // 重新填入 LINE 名稱到隱藏欄位
+          document.getElementById('lineName').value = userProfile.displayName;
+        } else {
+          alert(result.message || '報名失敗');
         }
+      } catch (error) {
+        console.error('報名失敗', error);
+        alert('報名失敗，請稍後再試');
+      } finally {
+        showLoading(false);
+      }
+    });
 
         // 載入活動資訊
         async function loadEventInfo() {
