@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,20 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
+
 <body class="bg-gray-50">
   <div class="container mx-auto px-4 py-8 max-w-2xl">
     <!-- 載入中提示 -->
     <div id="loading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
     </div>
-    
+
     <!-- 活動列表 -->
     <div id="eventList" class="hidden">
       <h1 class="text-2xl font-bold mb-6 text-center">活動列表</h1>
       <div id="eventCards" class="space-y-4"></div>
     </div>
-    
+
     <!-- 報名表單 -->
     <div id="registrationForm" class="hidden">
       <button onclick="showEventList()" class="mb-4 text-blue-600 hover:text-blue-800 flex items-center">
@@ -39,40 +41,61 @@
 
   <script>
     let currentEvent = null;
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzusMQeF38hxZCVTIrvPMb4cBjxshuoy2wODlA_X3DxXWbUJpj5Id3QObN74LoEU4Tp/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwUGSGI6932IGvDyO8e5R04HhKMxUri3Vpwgh25iVWglP3j3YV6nqILHALY9iOFkhJe/exec';
     const LIFF_ID = '2001679903-r5VXNe5g';
     
     // 初始化LIFF
-    async function initializeLiff() {
-      try {
-        await liff.init({ liffId: LIFF_ID });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          await loadEvents();
-        }
-      } catch (error) {
-        showError('LIFF初始化失敗，請重新整理頁面');
-      } finally {
-        document.getElementById('loading').classList.add('hidden');
-      }
+   // 修改 initializeLiff 函數
+async function initializeLiff() {
+  try {
+    console.log('Initializing LIFF...');
+    await liff.init({ liffId: LIFF_ID });
+    console.log('LIFF initialized');
+    
+    if (!liff.isLoggedIn()) {
+      console.log('User not logged in, redirecting to login...');
+      liff.login();
+    } else {
+      console.log('User logged in, loading events...');
+      await loadEvents();
     }
+  } catch (error) {
+    console.error('LIFF initialization error:', error);
+    showError(`LIFF初始化失敗: ${error.message}`);
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+  }
+}
+
     
     // 載入活動列表
-    async function loadEvents() {
-      try {
-        const response = await fetch(`${GAS_URL}?action=getEvents`);
-        const data = await response.json();
-        
-        if (data.status === 200) {
-          displayEvents(data.data);
-        } else {
-          throw new Error(data.message || '載入活動失敗');
-        }
-      } catch (error) {
-        showError(error.message);
+   async function loadEvents() {
+  try {
+    const response = await fetch(`${GAS_URL}?action=getEvents`, {
+      method: 'GET',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
       }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
+    const data = await response.json();
+    
+    if (data.status === 200) {
+      displayEvents(data.data);
+    } else {
+      throw new Error(data.message || '載入活動失敗');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showError(`載入活動失敗: ${error.message}`);
+  }
+}
+
     
     // 顯示活動列表
     function displayEvents(events) {
@@ -220,52 +243,59 @@
     }
     
     // 提交報名
-    async function submitRegistration(e) {
-      e.preventDefault();
-      
-      try {
-        const form = e.target;
-        const count = parseInt(document.getElementById('participantCount').value);
-        const participants = [];
-        
-        for (let i = 0; i < count; i++) {
-          participants.push({
-            name: form[`name_${i}`].value.trim(),
-            meal: currentEvent.formType === 'standard_meal' ? 
-                  form[`meal_${i}`].value : null,
-            note: form[`note_${i}`].value.trim()
-          });
-        }
-        
-        const profile = await liff.getProfile();
-        const response = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'submitRegistration',
-            eventId: currentEvent.id,
-            participants: participants,
-            lineInfo: {
-              userId: profile.userId,
-              displayName: profile.displayName
-            }
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (data.status === 200) {
-          alert('報名成功！');
-          showEventList();
-        } else {
-          throw new Error(data.message || '報名失敗');
-        }
-      } catch (error) {
-        showError(error.message);
-      }
+    // 修改 submitRegistration 函數
+async function submitRegistration(e) {
+  e.preventDefault();
+  
+  try {
+    const form = e.target;
+    const count = parseInt(document.getElementById('participantCount').value);
+    const participants = [];
+    
+    for (let i = 0; i < count; i++) {
+      participants.push({
+        name: form[`name_${i}`].value.trim(),
+        meal: currentEvent.formType === 'standard_meal' ? 
+              form[`meal_${i}`].value : null,
+        note: form[`note_${i}`].value.trim()
+      });
     }
+    
+    const profile = await liff.getProfile();
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'submitRegistration',
+        eventId: currentEvent.id,
+        participants: participants,
+        lineInfo: {
+          userId: profile.userId,
+          displayName: profile.displayName
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === 200) {
+      alert('報名成功！');
+      showEventList();
+    } else {
+      throw new Error(data.message || '報名失敗');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showError(`報名失敗: ${error.message}`);
+  }
+}
     
     // 顯示活動列表
     function showEventList() {
@@ -274,19 +304,28 @@
       loadEvents();
     }
     
-    // 顯示錯誤訊息
-    function showError(message) {
-      const toast = document.getElementById('errorToast');
-      const messageElement = document.getElementById('errorMessage');
-      messageElement.textContent = message;
-      toast.classList.remove('hidden');
-      setTimeout(() => {
-        toast.classList.add('hidden');
-      }, 3000);
-    }
+   // 在前端增加錯誤處理函數
+function showError(message) {
+  console.error('Error:', message);
+  const toast = document.getElementById('errorToast');
+  const messageElement = document.getElementById('errorMessage');
+  messageElement.textContent = message;
+  toast.classList.remove('hidden');
+  setTimeout(() => {
+    toast.classList.add('hidden');
+  }, 5000);
+}
+
+// 在後端增加日誌記錄
+function logError(error, context = '') {
+  console.error(`Error ${context}:`, error);
+  // 可以加入將錯誤記錄到試算表的功能
+}
+
     
     // 初始化
     document.addEventListener('DOMContentLoaded', initializeLiff);
   </script>
 </body>
+
 </html>
