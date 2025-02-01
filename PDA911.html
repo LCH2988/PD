@@ -1,192 +1,170 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>活動報名系統</title>
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- LIFF SDK -->
-  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
-
-<body class="bg-gray-100">
+<body class="bg-gray-50">
   <div class="container mx-auto px-4 py-8">
-    <!-- 頁面標題 -->
-    <header class="text-center mb-8">
-      <h1 class="text-3xl font-bold">活動報名系統</h1>
-    </header>
-
+    <!-- 載入中提示 -->
+    <div id="loading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+    </div>
+    
     <!-- 活動列表 -->
-    <div id="eventList" class="space-y-4"></div>
-
-    <!-- 報名表單容器 -->
-    <div id="registrationForm" class="hidden"></div>
+    <div id="eventList" class="hidden">
+      <h1 class="text-2xl font-bold mb-6 text-center">活動列表</h1>
+      <div id="eventCards" class="space-y-4"></div>
+    </div>
+    
+    <!-- 報名表單 -->
+    <div id="registrationForm" class="hidden">
+      <button onclick="showEventList()" class="mb-4 text-blue-600">
+        ← 返回活動列表
+      </button>
+      <div id="formContent"></div>
+    </div>
   </div>
 
-  <!-- 初始化腳本 -->
   <script>
-    const CONFIG = {
-  // LIFF 設定
-  LIFF_ID: '2001679903-r5VXNe5g',
-  
-  // Google Apps Script 設定
-  GAS_URL: 'https://script.google.com/macros/s/AKfycbwbi2cmbFVnU42eQF6oY9eoqem1eFBwjQm9ejtppm5ASQxW3kjZfvTVNkfN251EnOtP/exec',
-  
-  // API 端點
-  API_ENDPOINTS: {
-    GET_EVENTS: '/getEvents',
-    GET_EVENT: '/getEvent',
-    SUBMIT_REGISTRATION: '/submitRegistration',
-    GET_REGISTRATIONS: '/getRegistrations'
-  },
-  
-  // 表單類型
-  FORM_TYPES: {
-    STANDARD: 'standard',
-    STANDARD_MEAL: 'standard_meal'
-  }
-};
-
-class ApiService {
-  constructor() {
-    this.baseUrl = CONFIG.GAS_URL;
-  }
-  
-  // 通用 API 請求方法
-  async fetchApi(endpoint, method = 'GET', data = null) {
-    const options = {
-      method,
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    };
+    let currentEvent = null;
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwszLvnp1GtGNvfLzoo72qK6HCYxSF1JEJE0dbGIp6_k0JK2ONvqDMqHBHrzReUPW0B/exec';
+    const LIFF_ID = '2001679903-r5VXNe5g';
     
-    if (data) {
-      options.body = JSON.stringify(data);
+    // 初始化LIFF
+    async function initializeLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          await loadEvents();
+        }
+      } catch (error) {
+        showError('LIFF初始化失敗');
+      } finally {
+        document.getElementById('loading').classList.add('hidden');
+      }
     }
     
-    try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
-  }
-  
-  // 獲取活動列表
-  async getEvents() {
-    return this.fetchApi(CONFIG.API_ENDPOINTS.GET_EVENTS);
-  }
-  
-  // 獲取特定活動
-  async getEvent(eventId) {
-    return this.fetchApi(`${CONFIG.API_ENDPOINTS.GET_EVENT}?id=${eventId}`);
-  }
-  
-  // 提交報名
-  async submitRegistration(formData) {
-    return this.fetchApi(CONFIG.API_ENDPOINTS.SUBMIT_REGISTRATION, 'POST', formData);
-  }
-  
-  // 獲取報名列表
-  async getRegistrations(eventId) {
-    return this.fetchApi(`${CONFIG.API_ENDPOINTS.GET_REGISTRATIONS}?eventId=${eventId}`);
-  }
-}
-
-
-class FormHandler {
-  constructor(formType) {
-    this.formType = formType;
-    this.api = new ApiService();
-  }
-  
-  // 生成表單 HTML
-  generateForm(event) {
-    const isStandardMeal = this.formType === CONFIG.FORM_TYPES.STANDARD_MEAL;
-    
-    return `
-      <form id="registrationForm" class="space-y-6">
-        <div class="event-info bg-gray-50 p-4 rounded-lg">
-          <h2 class="text-xl font-bold mb-2">${event.title}</h2>
-          <p class="text-gray-600">${event.datetime}</p>
-          <p class="mt-2">${event.description}</p>
-        </div>
+    // 載入活動列表
+    async function loadEvents() {
+      try {
+        const response = await fetch(`${GAS_URL}?action=getEvents`);
+        const data = await response.json();
         
-        <div class="form-section">
-          <h3 class="text-lg font-semibold mb-4">報名資訊</h3>
-          
-          <!-- 參加人數 -->
+        if (data.status === 200) {
+          displayEvents(data.data);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        showError('載入活動失敗');
+      }
+    }
+    
+    // 顯示活動列表
+    function displayEvents(events) {
+      const container = document.getElementById('eventCards');
+      container.innerHTML = events.map(event => `
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-xl font-semibold mb-2">${event.title}</h2>
+          <p class="text-gray-600 mb-2">${event.datetime}</p>
+          <p class="mb-4">${event.summary}</p>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-500">
+              報名人數：${event.currentParticipants}/${event.maxParticipants}
+            </span>
+            <button 
+              onclick="showRegistrationForm('${event.id}')"
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+              ${!event.isRegistrationOpen ? 'disabled' : ''}>
+              ${event.isRegistrationOpen ? '立即報名' : '報名截止'}
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('eventList').classList.remove('hidden');
+    }
+    
+    // 顯示報名表單
+    async function showRegistrationForm(eventId) {
+      try {
+        const response = await fetch(`${GAS_URL}?action=getEvent&eventId=${eventId}`);
+        const data = await response.json();
+        
+        if (data.status === 200) {
+          currentEvent = data.data;
+          displayRegistrationForm(currentEvent);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        showError('載入報名表單失敗');
+      }
+    }
+    
+    // 顯示報名表單
+    function displayRegistrationForm(event) {
+      document.getElementById('eventList').classList.add('hidden');
+      const formContainer = document.getElementById('formContent');
+      
+      formContainer.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">${event.title}</h2>
+        <p class="text-gray-600 mb-6">${event.datetime}</p>
+        
+        <form id="registrationForm" onsubmit="submitRegistration(event)">
           <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700">
-              參加人數
-            </label>
-            <select id="participantCount" class="mt-1 block w-full rounded-md border-gray-300"
-                    onchange="formHandler.updateParticipantFields()">
-              ${this.generateNumberOptions(1, 5)}
+            <label class="block text-gray-700 mb-2">參加人數</label>
+            <select id="participantCount" 
+                    onchange="updateParticipantFields()"
+                    class="w-full border rounded px-3 py-2">
+              ${[1,2,3,4,5].map(n => 
+                `<option value="${n}">${n}人</option>`
+              ).join('')}
             </select>
           </div>
           
-          <!-- 參加者資訊 -->
           <div id="participantFields"></div>
-        </div>
-        
-        <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md">
-          提交報名
-        </button>
-      </form>
-    `;
-  }
-  
-  // 生成人數選項
-  generateNumberOptions(min, max) {
-    let options = '';
-    for (let i = min; i <= max; i++) {
-      options += `<option value="${i}">${i}人</option>`;
-    }
-    return options;
-  }
-  
-  // 更新參加者欄位
-  updateParticipantFields() {
-    const count = document.getElementById('participantCount').value;
-    const container = document.getElementById('participantFields');
-    const isStandardMeal = this.formType === CONFIG.FORM_TYPES.STANDARD_MEAL;
-    
-    let html = '';
-    for (let i = 0; i < count; i++) {
-      html += `
-        <div class="participant-info border p-4 rounded-lg mb-4">
-          <h4 class="font-medium mb-3">參加者 ${i + 1}</h4>
           
-          <!-- 姓名 -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium text-gray-700">姓名</label>
-            <input type="text" name="name_${i}" required
-                   class="mt-1 block w-full rounded-md border-gray-300">
+          <button type="submit" 
+                  class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
+            提交報名
+          </button>
+        </form>
+      `;
+      
+      document.getElementById('registrationForm').classList.remove('hidden');
+      updateParticipantFields();
+    }
+    
+    // 更新參加者欄位
+    function updateParticipantFields() {
+      const count = parseInt(document.getElementById('participantCount').value);
+      const container = document.getElementById('participantFields');
+      
+      container.innerHTML = Array(count).fill(0).map((_, i) => `
+        <div class="mb-6 p-4 border rounded">
+          <h3 class="font-semibold mb-4">參加者 ${i + 1}</h3>
+          
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">姓名 *</label>
+            <input type="text" 
+                   name="name_${i}" 
+                   required
+                   class="w-full border rounded px-3 py-2">
           </div>
           
-          ${isStandardMeal ? `
-            <!-- 餐點選擇 -->
-            <div class="mb-3">
-              <label class="block text-sm font-medium text-gray-700">餐點選擇</label>
-              <select name="meal_${i}" required
-                      class="mt-1 block w-full rounded-md border-gray-300">
+          ${currentEvent.formType === 'standard_meal' ? `
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">餐點選擇 *</label>
+              <select name="meal_${i}" 
+                      required
+                      class="w-full border rounded px-3 py-2">
                 <option value="葷食">葷食</option>
                 <option value="素食">素食</option>
                 <option value="不需要">不需要</option>
@@ -194,214 +172,78 @@ class FormHandler {
             </div>
           ` : ''}
           
-          <!-- 備註 -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium text-gray-700">備註</label>
-            <textarea name="note_${i}"
-                      class="mt-1 block w-full rounded-md border-gray-300"
+          <div class="mb-4">
+            <label class="block text-gray-700 mb-2">備註</label>
+            <textarea name="note_${i}" 
+                      class="w-full border rounded px-3 py-2"
                       rows="2"></textarea>
           </div>
         </div>
-      `;
+      `).join('');
     }
     
-    container.innerHTML = html;
-  }
-  
-  // 處理表單提交
-  async handleSubmit(event) {
-    event.preventDefault();
-    
-    try {
-      const formData = this.collectFormData();
-      const response = await this.api.submitRegistration(formData);
+    // 提交報名
+    async function submitRegistration(e) {
+      e.preventDefault();
       
-      if (response.success) {
-        alert('報名成功！');
-        window.location.href = 'index.html';
-      } else {
-        throw new Error(response.message || '報名失敗');
-      }
-    } catch (error) {
-      alert(`報名失敗：${error.message}`);
-    }
-  }
-  
-  // 收集表單數據
-  collectFormData() {
-    const form = document.getElementById('registrationForm');
-    const count = document.getElementById('participantCount').value;
-    const participants = [];
-    
-    for (let i = 0; i < count; i++) {
-      participants.push({
-        name: form[`name_${i}`].value,
-        meal: this.formType === CONFIG.FORM_TYPES.STANDARD_MEAL ? 
-              form[`meal_${i}`].value : null,
-        note: form[`note_${i}`].value
-      });
-    }
-    
-    return {
-      eventId: this.eventId,
-      participants,
-      lineInfo: {
-        userId: liff.getDecodedIDToken().sub,
-        displayName: liff.getDecodedIDToken().name
-      }
-    };
-  }
-}
-
-
-
-class EventHandler {
-  constructor() {
-    this.api = new ApiService();
-  }
-  
-  // 顯示活動列表
-  async displayEvents() {
-    try {
-      const events = await this.api.getEvents();
-      const container = document.getElementById('eventList');
-      
-      container.innerHTML = events.map(event => this.generateEventCard(event)).join('');
-    } catch (error) {
-      console.error('Failed to load events:', error);
-      alert('載入活動失敗，請重新整理頁面');
-    }
-  }
-  
-  // 生成活動卡片
-  generateEventCard(event) {
-    return `
-      <div class="event-card bg-white shadow rounded-lg p-6 mb-4">
-        <h3 class="text-xl font-bold mb-2">${event.title}</h3>
-        <div class="text-gray-600 mb-2">
-          <i class="fas fa-calendar-alt mr-2"></i>${event.datetime}
-        </div>
-        <p class="text-gray-700 mb-4">${event.summary}</p>
-        
-        <div class="flex justify-between items-center">
-          <span class="text-sm text-gray-500">
-            報名人數：${event.currentParticipants}/${event.maxParticipants}
-          </span>
-          <div class="space-x-2">
-            <button onclick="eventHandler.shareEvent('${event.id}')"
-                    class="bg-green-500 text-white px-4 py-2 rounded">
-              分享
-            </button>
-            <button onclick="eventHandler.showRegistrationForm('${event.id}')"
-                    class="bg-blue-500 text-white px-4 py-2 rounded"
-                    ${event.currentParticipants >= event.maxParticipants ? 'disabled' : ''}>
-              報名參加
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-  
-  // 顯示報名表單
-  async showRegistrationForm(eventId) {
-    try {
-      const event = await this.api.getEvent(eventId);
-      const formHandler = new FormHandler(event.formType);
-      
-      document.getElementById('eventList').style.display = 'none';
-      document.getElementById('registrationForm').innerHTML = formHandler.generateForm(event);
-      document.getElementById('registrationForm').style.display = 'block';
-      
-      formHandler.updateParticipantFields();
-    } catch (error) {
-      console.error('Failed to load registration form:', error);
-      alert('載入報名表單失敗');
-    }
-  }
-  
-  // 分享活動
-  async shareEvent(eventId) {
-    try {
-      const event = await this.api.getEvent(eventId);
-      
-      if (liff.isApiAvailable('shareTargetPicker')) {
-        const message = {
-          type: 'flex',
-          altText: `活動分享：${event.title}`,
-          contents: {
-            type: 'bubble',
-            body: {
-              type: 'box',
-              layout: 'vertical',
-              contents: [
-                {
-                  type: 'text',
-                  text: event.title,
-                  weight: 'bold',
-                  size: 'xl'
-                },
-                {
-                  type: 'text',
-                  text: event.datetime,
-                  size: 'sm',
-                  color: '#999999',
-                  margin: 'md'
-                },
-                {
-                  type: 'text',
-                  text: event.summary,
-                  wrap: true,
-                  margin: 'md'
-                }
-              ]
-            },
-            footer: {
-              type: 'box',
-              layout: 'vertical',
-              contents: [
-                {
-                  type: 'button',
-                  style: 'primary',
-                  action: {
-                    type: 'uri',
-                    label: '立即報名',
-                    uri: `https://your-github-pages-url/?eventId=${eventId}`
-                  }
-                }
-              ]
-            }
-          }
-        };
-        
-        await liff.shareTargetPicker([message]);
-      }
-    } catch (error) {
-      console.error('Failed to share event:', error);
-      alert('分享失敗');
-    }
-  }
-}
-
-    // LIFF 初始化
-    async function initializeLiff() {
       try {
-        await liff.init({ liffId: CONFIG.LIFF_ID });
-        if (!liff.isLoggedIn()) {
-          liff.login();
+        const form = e.target;
+        const count = parseInt(document.getElementById('participantCount').value);
+        const participants = [];
+        
+        for (let i = 0; i < count; i++) {
+          participants.push({
+            name: form[`name_${i}`].value,
+            meal: currentEvent.formType === 'standard_meal' ? 
+                  form[`meal_${i}`].value : null,
+            note: form[`note_${i}`].value
+          });
+        }
+        
+        const profile = await liff.getProfile();
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'submitRegistration',
+            eventId: currentEvent.id,
+            participants: participants,
+            lineInfo: {
+              userId: profile.userId,
+              displayName: profile.displayName
+            }
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 200) {
+          alert('報名成功！');
+          showEventList();
         } else {
-          const eventHandler = new EventHandler();
-          await eventHandler.displayEvents();
+          throw new Error(data.message);
         }
       } catch (error) {
-        console.error('LIFF initialization failed', error);
-        alert('初始化失敗，請重新整理頁面');
+        showError('報名失敗：' + error.message);
       }
     }
     
-    // 頁面載入完成後初始化
+    // 顯示活動列表
+    function showEventList() {
+      document.getElementById('registrationForm').classList.add('hidden');
+      document.getElementById('eventList').classList.remove('hidden');
+      loadEvents();
+    }
+    
+    // 顯示錯誤訊息
+    function showError(message) {
+      alert(message);
+    }
+    
+    // 初始化
     document.addEventListener('DOMContentLoaded', initializeLiff);
   </script>
 </body>
-
 </html>
