@@ -8,9 +8,9 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body class="bg-gray-50">
-  <div class="container mx-auto px-4 py-8">
+  <div class="container mx-auto px-4 py-8 max-w-2xl">
     <!-- 載入中提示 -->
-    <div id="loading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+    <div id="loading" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
     </div>
     
@@ -22,16 +22,24 @@
     
     <!-- 報名表單 -->
     <div id="registrationForm" class="hidden">
-      <button onclick="showEventList()" class="mb-4 text-blue-600">
-        ← 返回活動列表
+      <button onclick="showEventList()" class="mb-4 text-blue-600 hover:text-blue-800 flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        返回活動列表
       </button>
       <div id="formContent"></div>
+    </div>
+
+    <!-- 錯誤提示 -->
+    <div id="errorToast" class="hidden fixed bottom-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
+      <p id="errorMessage"></p>
     </div>
   </div>
 
   <script>
     let currentEvent = null;
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwpdzC08EIVxKLrJF4QZmB3WFCb3xXAnhJoi59A4flxC5PNWpsy9yOPEIDvbNtxkxB2/exec';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbzusMQeF38hxZCVTIrvPMb4cBjxshuoy2wODlA_X3DxXWbUJpj5Id3QObN74LoEU4Tp/exec';
     const LIFF_ID = '2001679903-r5VXNe5g';
     
     // 初始化LIFF
@@ -44,7 +52,7 @@
           await loadEvents();
         }
       } catch (error) {
-        showError('LIFF初始化失敗');
+        showError('LIFF初始化失敗，請重新整理頁面');
       } finally {
         document.getElementById('loading').classList.add('hidden');
       }
@@ -59,34 +67,56 @@
         if (data.status === 200) {
           displayEvents(data.data);
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || '載入活動失敗');
         }
       } catch (error) {
-        showError('載入活動失敗');
+        showError(error.message);
       }
     }
     
     // 顯示活動列表
     function displayEvents(events) {
       const container = document.getElementById('eventCards');
-      container.innerHTML = events.map(event => `
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold mb-2">${event.title}</h2>
-          <p class="text-gray-600 mb-2">${event.datetime}</p>
-          <p class="mb-4">${event.summary}</p>
-          <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-500">
-              報名人數：${event.currentParticipants}/${event.maxParticipants}
-            </span>
-            <button 
-              onclick="showRegistrationForm('${event.id}')"
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-              ${!event.isRegistrationOpen ? 'disabled' : ''}>
-              ${event.isRegistrationOpen ? '立即報名' : '報名截止'}
-            </button>
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-center text-gray-500">目前沒有開放報名的活動</p>';
+      } else {
+        container.innerHTML = events.map(event => `
+          <div class="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+            <h2 class="text-xl font-semibold mb-2">${event.title}</h2>
+            <p class="text-gray-600 mb-2">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              ${event.datetime}
+            </p>
+            <p class="text-gray-600 mb-2">
+              <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              ${event.location}
+            </p>
+            <p class="mb-4">${event.summary}</p>
+            <div class="flex justify-between items-center">
+              <span class="text-sm ${event.currentParticipants >= event.maxParticipants ? 'text-red-500' : 'text-gray-500'}">
+                報名人數：${event.currentParticipants}/${event.maxParticipants}
+              </span>
+              <button 
+                onclick="showRegistrationForm('${event.id}')"
+                class="${event.isRegistrationOpen ? 
+                  'bg-blue-500 hover:bg-blue-600' : 
+                  'bg-gray-400 cursor-not-allowed'} 
+                  text-white px-4 py-2 rounded transition-colors"
+                ${!event.isRegistrationOpen ? 'disabled' : ''}>
+                ${event.isRegistrationOpen ? '立即報名' : '報名截止'}
+              </button>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
       
       document.getElementById('eventList').classList.remove('hidden');
     }
@@ -101,10 +131,10 @@
           currentEvent = data.data;
           displayRegistrationForm(currentEvent);
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || '載入報名表單失敗');
         }
       } catch (error) {
-        showError('載入報名表單失敗');
+        showError(error.message);
       }
     }
     
@@ -114,28 +144,32 @@
       const formContainer = document.getElementById('formContent');
       
       formContainer.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4">${event.title}</h2>
-        <p class="text-gray-600 mb-6">${event.datetime}</p>
-        
-        <form id="registrationForm" onsubmit="submitRegistration(event)">
-          <div class="mb-4">
-            <label class="block text-gray-700 mb-2">參加人數</label>
-            <select id="participantCount" 
-                    onchange="updateParticipantFields()"
-                    class="w-full border rounded px-3 py-2">
-              ${[1,2,3,4,5].map(n => 
-                `<option value="${n}">${n}人</option>`
-              ).join('')}
-            </select>
-          </div>
+        <div class="bg-white rounded-lg shadow p-6">
+          <h2 class="text-2xl font-bold mb-2">${event.title}</h2>
+          <p class="text-gray-600 mb-4">${event.datetime}</p>
+          <p class="mb-6">${event.content || event.summary}</p>
           
-          <div id="participantFields"></div>
-          
-          <button type="submit" 
-                  class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-            提交報名
-          </button>
-        </form>
+          <form id="registrationForm" onsubmit="submitRegistration(event)" class="space-y-6">
+            <div class="mb-4">
+              <label class="block text-gray-700 mb-2">參加人數</label>
+              <select id="participantCount" 
+                      onchange="updateParticipantFields()"
+                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                ${[1,2,3,4,5].map(n => 
+                  `<option value="${n}">${n}人</option>`
+                ).join('')}
+              </select>
+            </div>
+            
+            <div id="participantFields" class="space-y-6"></div>
+            
+            <button type="submit" 
+                    class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 
+                           transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+              確認報名
+            </button>
+          </form>
+        </div>
       `;
       
       document.getElementById('registrationForm').classList.remove('hidden');
@@ -148,7 +182,7 @@
       const container = document.getElementById('participantFields');
       
       container.innerHTML = Array(count).fill(0).map((_, i) => `
-        <div class="mb-6 p-4 border rounded">
+        <div class="p-4 border rounded-lg">
           <h3 class="font-semibold mb-4">參加者 ${i + 1}</h3>
           
           <div class="mb-4">
@@ -156,7 +190,8 @@
             <input type="text" 
                    name="name_${i}" 
                    required
-                   class="w-full border rounded px-3 py-2">
+                   class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="請輸入姓名">
           </div>
           
           ${currentEvent.formType === 'standard_meal' ? `
@@ -164,10 +199,11 @@
               <label class="block text-gray-700 mb-2">餐點選擇 *</label>
               <select name="meal_${i}" 
                       required
-                      class="w-full border rounded px-3 py-2">
+                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">請選擇</option>
                 <option value="葷食">葷食</option>
                 <option value="素食">素食</option>
-                <option value="不需要">不需要</option>
+                <option value="不需要">不需要餐點</option>
               </select>
             </div>
           ` : ''}
@@ -175,8 +211,9 @@
           <div class="mb-4">
             <label class="block text-gray-700 mb-2">備註</label>
             <textarea name="note_${i}" 
-                      class="w-full border rounded px-3 py-2"
-                      rows="2"></textarea>
+                      class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      rows="2"
+                      placeholder="如有特殊需求請註明"></textarea>
           </div>
         </div>
       `).join('');
@@ -193,10 +230,10 @@
         
         for (let i = 0; i < count; i++) {
           participants.push({
-            name: form[`name_${i}`].value,
+            name: form[`name_${i}`].value.trim(),
             meal: currentEvent.formType === 'standard_meal' ? 
                   form[`meal_${i}`].value : null,
-            note: form[`note_${i}`].value
+            note: form[`note_${i}`].value.trim()
           });
         }
         
@@ -223,10 +260,10 @@
           alert('報名成功！');
           showEventList();
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || '報名失敗');
         }
       } catch (error) {
-        showError('報名失敗：' + error.message);
+        showError(error.message);
       }
     }
     
@@ -239,7 +276,13 @@
     
     // 顯示錯誤訊息
     function showError(message) {
-      alert(message);
+      const toast = document.getElementById('errorToast');
+      const messageElement = document.getElementById('errorMessage');
+      messageElement.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
     }
     
     // 初始化
