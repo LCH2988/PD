@@ -13,8 +13,11 @@
             --primary-color: #00B900;
             --secondary-color: #1E1E1E;
             --background-color: #F7F7F7;
-            --border-radius: 8px;
-            --spacing: 20px;
+            --border-radius: 12px;
+            --spacing: 24px;
+            --font-size-base: 18px;
+            --font-size-large: 24px;
+            --font-size-xlarge: 32px;
         }
 
         * {
@@ -25,114 +28,16 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
+            line-height: 1.8;
             background-color: var(--background-color);
             color: var(--secondary-color);
+            font-size: var(--font-size-base);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: var(--spacing);
-        }
-
-        /* 活動卡片樣式 */
-        .activities-container {
-            margin-bottom: var(--spacing);
-        }
-
-        .swiper {
-            padding: 20px 0;
-        }
-
-        .activity-card {
-            background: #FFFFFF;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: var(--spacing);
-            height: 450px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .activity-header {
-            margin-bottom: 15px;
-        }
-
-        .activity-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .activity-date {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .activity-content {
-            flex-grow: 1;
-        }
-
-        .activity-description {
-            margin-bottom: 15px;
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .stats-card {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        .stats-number {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        .chart-container {
-            height: 150px;
-            margin-bottom: 15px;
-        }
-
-        .month-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .month-btn {
-            padding: 8px 16px;
-            border: none;
-            background-color: #fff;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .month-btn.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        /* 原有樣式保持不變 */
-        .card {
-            background: #FFFFFF;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: var(--spacing);
-            margin-bottom: var(--spacing);
         }
 
         .header {
@@ -142,33 +47,190 @@
 
         .header h1 {
             color: var(--primary-color);
-            font-size: 1.8rem;
-            margin-bottom: 10px;
+            font-size: var(--font-size-xlarge);
+            margin-bottom: 15px;
         }
 
         .header p {
             color: #666;
-            font-size: 1rem;
+            font-size: var(--font-size-large);
         }
 
-        /* 其他原有樣式... */
+        .month-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .month-btn {
+            padding: 12px 24px;
+            border: none;
+            background-color: #fff;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: var(--font-size-base);
+            min-width: 120px;
+        }
+
+        .month-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .activity-card {
+            background: #FFFFFF;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: var(--spacing);
+            height: 550px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .activity-header {
+            margin-bottom: 20px;
+        }
+
+        .activity-title {
+            font-size: var(--font-size-large);
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .activity-date {
+            color: #444;
+            font-size: var(--font-size-base);
+            font-weight: 500;
+        }
+
+        .activity-content {
+            flex-grow: 1;
+        }
+
+        .activity-description {
+            font-size: var(--font-size-base);
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stats-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: var(--font-size-large);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .stats-label {
+            font-size: var(--font-size-base);
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            height: 150px;
+            margin-bottom: 15px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: var(--font-size-large);
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: #009900;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: var(--font-size-base);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #DDD;
+            border-radius: var(--border-radius);
+            font-size: var(--font-size-base);
+        }
+
+        .error, .success {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+        }
+
+        .error {
+            color: #D32F2F;
+            background-color: #FFEBEE;
+        }
+
+        .success {
+            color: #388E3C;
+            background-color: #E8F5E9;
+        }
 
         @media (max-width: 768px) {
+            :root {
+                --font-size-base: 20px;
+                --font-size-large: 26px;
+                --font-size-xlarge: 34px;
+            }
+
             .container {
-                padding: 10px;
+                padding: 15px;
             }
 
             .activity-card {
                 height: auto;
-                min-height: 500px;
+                min-height: 600px;
             }
 
             .stats-container {
                 grid-template-columns: 1fr;
             }
+
+            .month-btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
@@ -179,15 +241,15 @@
         <div id="error-message" class="error" style="display: none;"></div>
         <div id="success-message" class="success" style="display: none;"></div>
 
-        <!-- 月份選擇器 -->
         <div class="month-selector">
             <button class="month-btn active" data-month="all">全部活動</button>
             <button class="month-btn" data-month="2">2月</button>
             <button class="month-btn" data-month="3">3月</button>
             <button class="month-btn" data-month="4">4月</button>
+            <button class="month-btn" data-month="5">5月</button>
+            <button class="month-btn" data-month="6">6月</button>
         </div>
 
-        <!-- 活動卡片容器 -->
         <div class="activities-container">
             <div class="swiper">
                 <div class="swiper-wrapper">
@@ -199,9 +261,8 @@
             </div>
         </div>
 
-        <!-- 報名表單卡片 -->
         <div class="card" id="registration-form-container" style="display: none;">
-            <h2>活動報名</h2>
+            <h2 style="font-size: var(--font-size-large); margin-bottom: 20px;">活動報名</h2>
             <form id="registration-form">
                 <div class="form-group">
                     <label for="participant-count">報名人數</label>
@@ -210,285 +271,284 @@
 
                 <div id="participants-container"></div>
 
-                <button type="submit">提交報名</button>
+                <button type="submit" class="btn-primary">確認報名</button>
             </form>
         </div>
     </div>
 
     <script>
-        let liffId = '2001679903-r5VXNe5g';
-        let gasUrl = 'https://script.google.com/macros/s/AKfycbxDM96dfIQmjGgqxxiS-cG6azVBbZLAG_kwTnPfcCOJw0wXgEZuAYU-lmRALhApHMur/exec';
-        let swiper;
-        let activities = [];
+    // LIFF 和 Google Apps Script 設定
+    const liffId = '2001679903-r5VXNe5g';  // 請替換為您的 LIFF ID
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbxDM96dfIQmjGgqxxiS-cG6azVBbZLAG_kwTnPfcCOJw0wXgEZuAYU-lmRALhApHMur/exec';  // 請替換為您的 Google Apps Script 網址
+    let swiper;
+    let activities = [];
 
-        // LIFF 初始化
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                }
-                const profile = await liff.getProfile();
-                document.getElementById('user-name').textContent = `歡迎，${profile.displayName}`;
-                await loadActivities();
-                initializeSwiper();
-                setupMonthFilter();
-            } catch (error) {
-                showError('LIFF 初始化失敗：' + error.message);
+    // LIFF 初始化
+    async function initializeLiff() {
+        try {
+            await liff.init({ liffId });
+            if (!liff.isLoggedIn()) {
+                liff.login();
             }
+            const profile = await liff.getProfile();
+            document.getElementById('user-name').textContent = `歡迎，${profile.displayName}`;
+            await loadActivities();
+            initializeSwiper();
+            setupMonthFilter();
+        } catch (error) {
+            showError('LIFF 初始化失敗：' + error.message);
         }
+    }
 
-        // 初始化 Swiper
-        function initializeSwiper() {
-            swiper = new Swiper('.swiper', {
-                slidesPerView: 1,
-                spaceBetween: 30,
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true
+    // 初始化 Swiper
+    function initializeSwiper() {
+        swiper = new Swiper('.swiper', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev'
+            },
+            breakpoints: {
+                768: {
+                    slidesPerView: 2
                 },
-                navigation: {
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev'
-                },
-                breakpoints: {
-                    768: {
-                        slidesPerView: 2
-                    },
-                    1024: {
-                        slidesPerView: 3
-                    }
+                1024: {
+                    slidesPerView: 3
                 }
-            });
-        }
-
-        // 載入活動清單
-        async function loadActivities() {
-            try {
-                const response = await fetch(`${gasUrl}?action=getActivities`);
-                activities = await response.json();
-                renderActivities(activities);
-            } catch (error) {
-                showError('載入活動失敗：' + error.message);
             }
+        });
+    }
+
+    // 載入活動清單
+    async function loadActivities() {
+        try {
+            const response = await fetch(`${gasUrl}?action=getActivities`);
+            activities = await response.json();
+            renderActivities(activities);
+        } catch (error) {
+            showError('載入活動失敗：' + error.message);
         }
+    }
 
-        // 在 script 部分加入日期格式化函數
-function formatDate(dateStr, timeStr) {
-    const date = new Date(dateStr);
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const weekday = weekdays[date.getDay()];
-    
-    return `${year}/${month}/${day}(${weekday}) ${timeStr}`;
-}
+    // 格式化日期
+    function formatDate(dateStr, timeStr) {
+        const date = new Date(dateStr);
+        const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+        
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const weekday = weekdays[date.getDay()];
+        
+        if (timeStr) {
+            const [hours, minutes] = timeStr.split(':');
+            return `${year}/${month}/${day}(${weekday}) ${hours.padStart(2, '0')}:${minutes}`;
+        }
+        return `${year}/${month}/${day}(${weekday})`;
+    }
 
-// 在渲染活動卡片的函數中修改日期顯示部分
-function renderActivities(activitiesList, month = 'all') {
-    swiper.removeAllSlides();
-    
-    activitiesList.forEach((activity, index) => {
-        if (index === 0) return; // 跳過標題列
+    // 渲染活動卡片
+    function renderActivities(activitiesList, month = 'all') {
+        swiper.removeAllSlides();
+        
+        activitiesList.forEach((activity, index) => {
+            if (index === 0) return; // 跳過標題列
 
-        const activityMonth = new Date(activity[1]).getMonth() + 1;
-        if (month !== 'all' && activityMonth !== parseInt(month)) return;
+            const activityMonth = new Date(activity[1]).getMonth() + 1;
+            if (month !== 'all' && activityMonth !== parseInt(month)) return;
 
-        const formattedDate = formatDate(activity[1], activity[2]);
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
 
-        const slide = document.createElement('div');
-        slide.className = 'swiper-slide';
-
-        const card = document.createElement('div');
-        card.className = 'activity-card';
-        card.innerHTML = `
-            <div class="activity-header">
-                <div class="activity-title">${activity[3]}</div>
-                <div class="activity-date">${formattedDate}</div>
-            </div>
-            <div class="activity-content">
-                <div class="activity-description">${activity[4]}</div>
-                <div class="stats-container">
-                    <div class="stats-card">
-                        <div class="stats-number">${activity[7]}</div>
-                        <div class="stats-label">名額上限</div>
-                    </div>
-                    <div class="stats-card">
-                        <div class="stats-number">剩餘</div>
-                        <div class="stats-label">報名截止：${formatDate(activity[8], '')}</div>
-                    </div>
+            const card = document.createElement('div');
+            card.className = 'activity-card';
+            card.innerHTML = `
+                <div class="activity-header">
+                    <div class="activity-title">${activity[3]}</div>
+                    <div class="activity-date">${formatDate(activity[1], activity[2])}</div>
                 </div>
-                <div class="chart-container">
-                    <canvas id="chart-${activity[0]}"></canvas>
+                <div class="activity-content">
+                    <div class="activity-description">${activity[4]}</div>
+                    <div class="stats-container">
+                        <div class="stats-card">
+                            <div class="stats-number">${activity[7]}</div>
+                            <div class="stats-label">名額上限</div>
+                        </div>
+                        <div class="stats-card">
+                            <div class="stats-number">剩餘</div>
+                            <div class="stats-label">報名截止：${formatDate(activity[8])}</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="chart-${activity[0]}"></canvas>
+                    </div>
+                    <button onclick="showRegistrationForm('${activity[0]}')" class="btn-primary">
+                        立即報名
+                    </button>
                 </div>
-                <button onclick="showRegistrationForm('${activity[0]}')" class="btn-primary">
-                    立即報名
-                </button>
-            </div>
-        `;
+            `;
 
-        slide.appendChild(card);
-        swiper.appendSlide(slide);
+            slide.appendChild(card);
+            swiper.appendSlide(slide);
+            initializeChart(activity[0]);
+        });
+    }
 
-        // 初始化圖表
-        initializeChart(activity[0]);
-    });
-}
-
-        // 初始化活動統計圖表
-        function initializeChart(activityId) {
-            const ctx = document.getElementById(`chart-${activityId}`).getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['葷食', '素食', '不需要'],
-                    datasets: [{
-                        data: [70, 20, 10],
-                        backgroundColor: ['#00B900', '#34C759', '#999999']
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                fontSize: 12
+    // 初始化圖表
+    function initializeChart(activityId) {
+        const ctx = document.getElementById(`chart-${activityId}`).getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['已報名', '剩餘名額'],
+                datasets: [{
+                    data: [30, 70],
+                    backgroundColor: ['#00B900', '#E9ECEF']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 14
                             }
                         }
                     }
                 }
+            }
+        });
+    }
+
+    // 設置月份篩選器
+    function setupMonthFilter() {
+        document.querySelectorAll('.month-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                renderActivities(activities, this.dataset.month);
             });
-        }
+        });
+    }
 
-        // 設置月份篩選器
-        function setupMonthFilter() {
-            document.querySelectorAll('.month-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    renderActivities(activities, this.dataset.month);
-                });
-            });
-        }
+    // 顯示報名表單
+    function showRegistrationForm(activityId) {
+        const formContainer = document.getElementById('registration-form-container');
+        formContainer.style.display = 'block';
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+        formContainer.dataset.activityId = activityId;
+        document.getElementById('registration-form').reset();
+        document.getElementById('participant-count').dispatchEvent(new Event('change'));
+    }
 
-        // 顯示報名表單
-        function showRegistrationForm(activityId) {
-            const formContainer = document.getElementById('registration-form-container');
-            formContainer.style.display = 'block';
-            formContainer.scrollIntoView({ behavior: 'smooth' });
-            
-            // 儲存當前選擇的活動ID
-            formContainer.dataset.activityId = activityId;
-            
-            // 重置表單
-            document.getElementById('registration-form').reset();
-            document.getElementById('participant-count').dispatchEvent(new Event('change'));
-        }
+    // 動態生成參加者表單
+    document.getElementById('participant-count').addEventListener('change', function() {
+        const container = document.getElementById('participants-container');
+        const count = parseInt(this.value);
+        container.innerHTML = '';
 
-        // 動態生成參加者表單
-        document.getElementById('participant-count').addEventListener('change', function() {
-            const container = document.getElementById('participants-container');
-            const count = parseInt(this.value);
-            container.innerHTML = '';
-
-            for (let i = 0; i < count; i++) {
-                container.innerHTML += `
+        for (let i = 0; i < count; i++) {
+            container.innerHTML += `
+                <div class="form-group">
+                    <h3 style="font-size: var(--font-size-large); margin-bottom: 15px;">參加者 ${i + 1}</h3>
                     <div class="form-group">
-                        <h3>參加者 ${i + 1}</h3>
-                        <div class="form-group">
-                            <label for="name-${i}">姓名</label>
-                            <input type="text" id="name-${i}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="meal-${i}">用餐需求</label>
-                            <select id="meal-${i}">
-                                <option value="葷">葷食</option>
-                                <option value="素">素食</option>
-                                <option value="無">不需要</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="note-${i}">備註</label>
-                            <textarea id="note-${i}" rows="2"></textarea>
-                        </div>
+                        <label for="name-${i}">姓名</label>
+                        <input type="text" id="name-${i}" required>
                     </div>
-                `;
-            }
-        });
+                    <div class="form-group">
+                        <label for="meal-${i}">用餐需求</label>
+                        <select id="meal-${i}">
+                            <option value="葷">葷食</option>
+                            <option value="素">素食</option>
+                            <option value="無">不需要</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="note-${i}">備註</label>
+                        <textarea id="note-${i}" rows="2"></textarea>
+                    </div>
+                </div>
+            `;
+        }
+    });
 
-        // 表單提交處理
-        document.getElementById('registration-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    // 表單提交處理
+    document.getElementById('registration-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        try {
+            const profile = await liff.getProfile();
+            const formContainer = document.getElementById('registration-form-container');
+            const activityId = formContainer.dataset.activityId;
+            const participantCount = parseInt(document.getElementById('participant-count').value);
             
-            try {
-                const profile = await liff.getProfile();
-                const formContainer = document.getElementById('registration-form-container');
-                const activityId = formContainer.dataset.activityId;
-                const participantCount = parseInt(document.getElementById('participant-count').value);
-                
-                const participants = [];
-                for (let i = 0; i < participantCount; i++) {
-                    participants.push({
-                        name: document.getElementById(`name-${i}`).value,
-                        mealOption: document.getElementById(`meal-${i}`).value,
-                        note: document.getElementById(`note-${i}`).value
-                    });
-                }
-
-                const data = {
-                    activityId,
-                    participants,
-                    lineName: profile.displayName,
-                    userId: profile.userId
-                };
-
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
+            const participants = [];
+            for (let i = 0; i < participantCount; i++) {
+                participants.push({
+                    name: document.getElementById(`name-${i}`).value,
+                    mealOption: document.getElementById(`meal-${i}`).value,
+                    note: document.getElementById(`note-${i}`).value
                 });
-
-                if (response.ok) {
-                    showSuccess('報名成功！');
-                    this.reset();
-                    formContainer.style.display = 'none';
-                    await loadActivities(); // 重新載入活動列表
-                } else {
-                    throw new Error('報名失敗');
-                }
-            } catch (error) {
-                showError('報名失敗：' + error.message);
             }
-        });
 
-        // 顯示錯誤訊息
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
+            const data = {
+                activityId,
+                participants,
+                lineName: profile.displayName,
+                userId: profile.userId
+            };
+
+            const response = await fetch(gasUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                showSuccess('報名成功！');
+                this.reset();
+                formContainer.style.display = 'none';
+                await loadActivities();
+            } else {
+                throw new Error('報名失敗');
+            }
+        } catch (error) {
+            showError('報名失敗：' + error.message);
         }
+    });
 
-        // 顯示成功訊息
-        function showSuccess(message) {
-            const successDiv = document.getElementById('success-message');
-            successDiv.textContent = message;
-            successDiv.style.display = 'block';
-            setTimeout(() => {
-                successDiv.style.display = 'none';
-            }, 5000);
-        }
+    // 顯示錯誤訊息
+    function showError(message) {
+        const errorDiv = document.getElementById('error-message');
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
 
-        // 初始化應用
-        window.onload = initializeLiff;
-    </script>
+    // 顯示成功訊息
+    function showSuccess(message) {
+        const successDiv = document.getElementById('success-message');
+        successDiv.textContent = message;
+        successDiv.style.display = 'block';
+        setTimeout(() => {
+            successDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    // 初始化應用
+    window.onload = initializeLiff;
+</script>
 </body>
 </html>
