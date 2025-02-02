@@ -273,6 +273,70 @@
             }
         }
 
+        // 在 script 部分加入日期格式化函數
+function formatDate(dateStr, timeStr) {
+    const date = new Date(dateStr);
+    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const weekday = weekdays[date.getDay()];
+    
+    return `${year}/${month}/${day}(${weekday}) ${timeStr}`;
+}
+
+// 在渲染活動卡片的函數中修改日期顯示部分
+function renderActivities(activitiesList, month = 'all') {
+    swiper.removeAllSlides();
+    
+    activitiesList.forEach((activity, index) => {
+        if (index === 0) return; // 跳過標題列
+
+        const activityMonth = new Date(activity[1]).getMonth() + 1;
+        if (month !== 'all' && activityMonth !== parseInt(month)) return;
+
+        const formattedDate = formatDate(activity[1], activity[2]);
+
+        const slide = document.createElement('div');
+        slide.className = 'swiper-slide';
+
+        const card = document.createElement('div');
+        card.className = 'activity-card';
+        card.innerHTML = `
+            <div class="activity-header">
+                <div class="activity-title">${activity[3]}</div>
+                <div class="activity-date">${formattedDate}</div>
+            </div>
+            <div class="activity-content">
+                <div class="activity-description">${activity[4]}</div>
+                <div class="stats-container">
+                    <div class="stats-card">
+                        <div class="stats-number">${activity[7]}</div>
+                        <div class="stats-label">名額上限</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-number">剩餘</div>
+                        <div class="stats-label">報名截止：${formatDate(activity[8], '')}</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chart-${activity[0]}"></canvas>
+                </div>
+                <button onclick="showRegistrationForm('${activity[0]}')" class="btn-primary">
+                    立即報名
+                </button>
+            </div>
+        `;
+
+        slide.appendChild(card);
+        swiper.appendSlide(slide);
+
+        // 初始化圖表
+        initializeChart(activity[0]);
+    });
+}
+
         // 渲染活動卡片
         function renderActivities(activitiesList, month = 'all') {
             swiper.removeAllSlides();
