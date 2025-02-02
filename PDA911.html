@@ -337,55 +337,6 @@ function renderActivities(activitiesList, month = 'all') {
     });
 }
 
-        // 渲染活動卡片
-        function renderActivities(activitiesList, month = 'all') {
-            swiper.removeAllSlides();
-            
-            activitiesList.forEach((activity, index) => {
-                if (index === 0) return; // 跳過標題列
-
-                const activityMonth = new Date(activity[1]).getMonth() + 1;
-                if (month !== 'all' && activityMonth !== parseInt(month)) return;
-
-                const slide = document.createElement('div');
-                slide.className = 'swiper-slide';
-
-                const card = document.createElement('div');
-                card.className = 'activity-card';
-                card.innerHTML = `
-                    <div class="activity-header">
-                        <div class="activity-title">${activity[3]}</div>
-                        <div class="activity-date">${activity[1]} ${activity[2]}</div>
-                    </div>
-                    <div class="activity-content">
-                        <div class="activity-description">${activity[4]}</div>
-                        <div class="stats-container">
-                            <div class="stats-card">
-                                <div class="stats-number">${activity[7]}</div>
-                                <div class="stats-label">名額上限</div>
-                            </div>
-                            <div class="stats-card">
-                                <div class="stats-number">剩餘</div>
-                                <div class="stats-label">報名截止：${activity[8]}</div>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="chart-${activity[0]}"></canvas>
-                        </div>
-                        <button onclick="showRegistrationForm('${activity[0]}')" class="btn-primary">
-                            立即報名
-                        </button>
-                    </div>
-                `;
-
-                slide.appendChild(card);
-                swiper.appendSlide(slide);
-
-                // 初始化圖表
-                initializeChart(activity[0]);
-            });
-        }
-
         // 初始化活動統計圖表
         function initializeChart(activityId) {
             const ctx = document.getElementById(`chart-${activityId}`).getContext('2d');
