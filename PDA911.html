@@ -1,90 +1,126 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>活動報名系統</title>
+  <!-- LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- Custom CSS -->
   <style>
     :root {
-      --primary-color: #00B900;
-      --secondary-color: #1E1E1E;
-    }
+  --primary-color: #00B900;
+  --secondary-color: #1E1E1E;
+}
 
-    .navbar-brand {
-      color: var(--primary-color) !important;
-    }
+/* Loading 指示器 */
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-    .activity-card {
-      transition: transform 0.3s;
-    }
+/* 活動卡片 */
+.activity-card {
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-    .activity-card:hover {
-      transform: translateY(-5px);
-    }
+.activity-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
 
-    .admin-section {
-      display: none;
-    }
+/* LINE 風格按鈕 */
+.btn-line {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+}
 
-    .loading {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(255, 255, 255, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
+.btn-line:hover {
+  background-color: #009900;
+  color: white;
+}
 
-    .activity-card {
-      transition: transform 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+.btn-line:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
 
-    .activity-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
+/* 導航欄品牌 */
+.navbar-brand {
+  color: var(--primary-color) !important;
+  font-weight: bold;
+}
 
-    .btn-line {
-      background-color: #00B900;
-      color: white;
-      border: none;
-    }
+/* 使用者資訊 */
+#user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-    .btn-line:hover {
-      background-color: #009900;
-      color: white;
-    }
+#user-info img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
 
-    .btn-line:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-  </style>
+/* 活動狀態標籤 */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.status-badge.registering {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.status-badge.full {
+  background-color: #dc3545;
+  color: white;
+}
+
+.status-badge.closed {
+  background-color: #6c757d;
+  color: white;
+}
+
+.status-badge.ended {
+  background-color: #212529;
+  color: white;
+}
+</style>
 </head>
-
 <body>
-  <!-- 在 body 標籤內的開始位置添加 -->
+  <!-- Loading 指示器 -->
   <div id="loading" class="loading" style="display: none;">
     <div class="spinner-border text-primary" role="status">
       <span class="visually-hidden">載入中...</span>
     </div>
   </div>
+
+  <!-- 導航欄 -->
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
       <a class="navbar-brand" href="#">活動報名系統</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+        <span class="navbar-toggler-icon"></span>
+      </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav me-auto">
           <li class="nav-item">
@@ -93,24 +129,25 @@
           <li class="nav-item">
             <a class="nav-link" href="#" onclick="showMyRegistrations()">我的報名</a>
           </li>
-          <li class="nav-item admin-section">
+          <li class="nav-item admin-section" style="display: none;">
             <a class="nav-link" href="#" onclick="showAdminPanel()">管理面板</a>
           </li>
         </ul>
-        <span class="navbar-text" id="user-info">
-                    載入中...
-                </span>
+        <div class="navbar-text" id="user-info">
+          載入中...
+        </div>
       </div>
     </div>
   </nav>
 
+  <!-- 主要內容區域 -->
   <div class="container mt-4">
     <div id="main-content">
       <!-- 內容將由 JavaScript 動態載入 -->
     </div>
   </div>
 
-  <!-- 活動報名表單 Modal -->
+  <!-- 報名表單 Modal -->
   <div class="modal fade" id="registrationModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -120,6 +157,7 @@
         </div>
         <div class="modal-body">
           <form id="registration-form">
+            <input type="hidden" id="reg-activity-id">
             <div class="mb-3">
               <label class="form-label">姓名</label>
               <input type="text" class="form-control" id="reg-name" required>
@@ -134,7 +172,7 @@
             </div>
             <div class="mb-3">
               <label class="form-label">備註</label>
-              <textarea class="form-control" id="reg-note"></textarea>
+              <textarea class="form-control" id="reg-note" rows="3"></textarea>
             </div>
           </form>
         </div>
@@ -146,108 +184,88 @@
     </div>
   </div>
 
+  <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Custom JS -->
   <script>
     // 設定
-        const liffId = '2001679903-r5VXNe5g';
-        const gasUrl = 'https://script.google.com/macros/s/AKfycbyziDhKohv6ZWiiPoTTGdToO_j8YXApmGhSZRicq5ghrVlVupI0XMvPs03s3oXjti-E/exec';
-        let userData = null;
-        let isAdmin = false;
+const liffId = '2001679903-r5VXNe5g';  // 請替換為您的 LIFF ID
+const gasUrl = 'https://script.google.com/macros/s/AKfycbzSFGVG3aLXPglR-IQkPyIMnSQ9A5JzEjlm9moigEp2Efi8-DEp8O8URy6gSIERQW30/exec';   // 請替換為您的 GAS 部署網址
 
-       // LIFF 初始化
-async function initializeLiff() {
-    try {
-        await liff.init({ liffId });
-        
-        if (!liff.isLoggedIn()) {
-            liff.login();
-            return;
-        }
-        
-        try {
-            const profile = await liff.getProfile();
-            userData = {
-                userId: profile.userId,
-                displayName: profile.displayName,
-                pictureUrl: profile.pictureUrl
-            };
-            
-            // 記錄使用者登入
-            const loginResponse = await fetch(
-                `${gasUrl}?action=userLogin&userId=${profile.userId}&displayName=${encodeURIComponent(profile.displayName)}&pictureUrl=${encodeURIComponent(profile.pictureUrl || '')}`
-            );
-            
-            const loginResult = await loginResponse.json();
-            
-            if (loginResult.success) {
-                document.getElementById('user-info').innerHTML = `
-                    <div class="d-flex align-items-center">
-                        ${profile.pictureUrl ? 
-                            `<img src="${profile.pictureUrl}" class="rounded-circle me-2" style="width: 30px; height: 30px;">` 
-                            : ''
-                        }
-                        <span>歡迎，${profile.displayName}</span>
-                    </div>
-                `;
-                
-                isAdmin = loginResult.isAdmin;
-                if (isAdmin) {
-                    document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'block');
-                }
-                
-                // 載入活動列表
-                await showActivities();
-                
-            } else {
-                throw new Error(loginResult.message || '登入處理失敗');
-            }
-            
-        } catch (error) {
-            console.error('處理使用者資料時發生錯誤：', error);
-            document.getElementById('user-info').innerHTML = `
-                <div class="text-danger">
-                    <i class="bi bi-exclamation-triangle"></i> 載入使用者資料失敗
-                </div>
-            `;
-        }
-        
-    } catch (error) {
-        console.error('LIFF 初始化失敗：', error);
-        document.getElementById('main-content').innerHTML = `
-            <div class="alert alert-danger">
-                <h4 class="alert-heading">系統初始化失敗</h4>
-                <p>請檢查您的網路連線並重新整理頁面。如果問題持續發生，請聯繫系統管理員。</p>
-                <hr>
-                <p class="mb-0">
-                    <button class="btn btn-outline-danger" onclick="window.location.reload()">
-                        <i class="bi bi-arrow-clockwise"></i> 重新整理
-                    </button>
-                </p>
-            </div>
-        `;
-    }
-}
-
-        // 檢查管理員權限
-        async function checkAdminStatus() {
-            try {
-                const response = await fetch(`${gasUrl}?action=checkAdmin&userId=${userData.userId}`);
-                const data = await response.json();
-                isAdmin = data.isAdmin;
-                if (isAdmin) {
-                    document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'block');
-                }
-            } catch (error) {
-                console.error('檢查管理員權限失敗：', error);
-            }
-        }
-
-        // 全域變數
+// 全域變數
+let userData = null;
+let isAdmin = false;
 let activities = [];
 let isLoading = false;
 
+// 初始化 LIFF
+async function initializeLiff() {
+  try {
+    await liff.init({ liffId });
+    
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    
+    try {
+      const profile = await liff.getProfile();
+      userData = {
+        userId: profile.userId,
+        displayName: profile.displayName,
+        pictureUrl: profile.pictureUrl
+      };
+      
+      // 記錄使用者登入
+      const loginResponse = await fetch(
+        `${gasUrl}?action=userLogin&userId=${profile.userId}&displayName=${encodeURIComponent(profile.displayName)}&pictureUrl=${encodeURIComponent(profile.pictureUrl || '')}`
+      );
+      
+      const loginResult = await loginResponse.json();
+      
+      if (loginResult.success) {
+        updateUserInfo(profile);
+        isAdmin = loginResult.isAdmin;
+        
+        if (isAdmin) {
+          document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'block');
+        }
+        
+        // 載入活動列表
+        await showActivities();
+        
+      } else {
+        throw new Error(loginResult.message || '登入處理失敗');
+      }
+      
+    } catch (error) {
+      console.error('處理使用者資料時發生錯誤：', error);
+      showError('載入使用者資料失敗');
+    }
+    
+  } catch (error) {
+    console.error('LIFF 初始化失敗：', error);
+    showError('系統初始化失敗');
+  }
+}
+
+// 更新使用者資訊顯示
+function updateUserInfo(profile) {
+  document.getElementById('user-info').innerHTML = `
+    <div class="d-flex align-items-center">
+      ${profile.pictureUrl ? 
+        `<img src="${profile.pictureUrl}" alt="使用者頭像" class="me-2">` 
+        : ''
+      }
+      <span>歡迎，${profile.displayName}</span>
+    </div>
+  `;
+}
+
 // 顯示活動列表
 async function showActivities() {
+  if (isLoading) return;
+  
   const mainContent = document.getElementById('main-content');
   const loadingDiv = document.getElementById('loading');
   
@@ -255,7 +273,6 @@ async function showActivities() {
     isLoading = true;
     loadingDiv.style.display = 'flex';
     
-    // 從後端獲取活動資料
     const response = await fetch(`${gasUrl}?action=getActivities`);
     const result = await response.json();
     
@@ -265,55 +282,34 @@ async function showActivities() {
     
     activities = result.activities;
     
-    // 顯示活動列表
     mainContent.innerHTML = `
-      <div class="container py-4">
-        <div class="row">
-          <div class="col-12 mb-4">
-            <h2>活動列表</h2>
-            ${isAdmin ? `
-              <button class="btn btn-line" onclick="showCreateActivityForm()">
-                <i class="bi bi-plus-circle"></i> 新增活動
-              </button>
-            ` : ''}
-          </div>
+      <div class="row">
+        <div class="col-12 mb-4">
+          <h2>活動列表</h2>
+          ${isAdmin ? `
+            <button class="btn btn-line" onclick="showCreateActivityForm()">
+              <i class="bi bi-plus-circle"></i> 新增活動
+            </button>
+          ` : ''}
         </div>
-        <div class="row" id="activities-container">
-          ${activities.length > 0 ? renderActivities(activities) : `
-            <div class="col-12">
-              <div class="alert alert-info">
-                目前沒有活動
-              </div>
+      </div>
+      <div class="row" id="activities-container">
+        ${activities.length > 0 ? renderActivities(activities) : `
+          <div class="col-12">
+            <div class="alert alert-info">
+              目前沒有活動
             </div>
-          `}
-        </div>
+          </div>
+        `}
       </div>
     `;
     
   } catch (error) {
     console.error('載入活動時發生錯誤：', error);
-    mainContent.innerHTML = `
-      <div class="container py-4">
-        <div class="alert alert-danger">
-          <h4 class="alert-heading">載入失敗</h4>
-          <p>${error.message || '請稍後再試'}</p>
-          <hr>
-          <button class="btn btn-outline-danger" onclick="retryLoadActivities()">
-            <i class="bi bi-arrow-clockwise"></i> 重新載入
-          </button>
-        </div>
-      </div>
-    `;
+    showError(error.message || '載入失敗');
   } finally {
     isLoading = false;
     loadingDiv.style.display = 'none';
-  }
-}
-
-// 重試載入活動
-function retryLoadActivities() {
-  if (!isLoading) {
-    showActivities();
   }
 }
 
@@ -324,6 +320,11 @@ function renderActivities(activities) {
       <div class="card activity-card h-100">
         <div class="card-body">
           <h5 class="card-title">${escapeHtml(activity.title)}</h5>
+          <div class="mb-3">
+            <span class="status-badge ${getStatusClass(activity.status)}">
+              ${activity.status}
+            </span>
+          </div>
           <p class="card-text">
             <small class="text-muted">
               <i class="bi bi-calendar"></i> ${activity.date}
@@ -367,23 +368,114 @@ function renderActivities(activities) {
   `).join('');
 }
 
-// 根據狀態返回按鈕文字
+// 顯示報名表單
+function showRegistrationForm(activityId) {
+  if (!userData) {
+    alert('請先登入');
+    return;
+  }
+  
+  const activity = activities.find(a => a.activityId === activityId);
+  if (!activity) {
+    alert('找不到活動資訊');
+    return;
+  }
+  
+  document.getElementById('reg-activity-id').value = activityId;
+  document.getElementById('reg-name').value = userData.displayName || '';
+  
+  const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
+  modal.show();
+}
+
+// 提交報名
+async function submitRegistration() {
+  const form = document.getElementById('registration-form');
+  const activityId = document.getElementById('reg-activity-id').value;
+  
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+  
+  const registrationData = {
+    activityId,
+    userId: userData.userId,
+    name: document.getElementById('reg-name').value,
+    phone: document.getElementById('reg-phone').value,
+    email: document.getElementById('reg-email').value,
+    note: document.getElementById('reg-note').value
+  };
+  
+  try {
+    const response = await fetch(gasUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'register',
+        data: registrationData
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('報名成功！');
+      bootstrap.Modal.getInstance(document.getElementById('registrationModal')).hide();
+      showActivities();
+    } else {
+      alert(result.message || '報名失敗，請稍後再試。');
+    }
+  } catch (error) {
+    console.error('報名失敗：', error);
+    alert('報名失敗，請稍後再試。');
+  }
+}
+
+// 顯示錯誤訊息
+function showError(message) {
+  document.getElementById('main-content').innerHTML = `
+    <div class="alert alert-danger">
+      <h4 class="alert-heading">發生錯誤</h4>
+      <p>${message}</p>
+      <hr>
+      <button class="btn btn-outline-danger" onclick="window.location.reload()">
+        <i class="bi bi-arrow-clockwise"></i> 重新整理
+      </button>
+    </div>
+  `;
+}
+
+// 取得狀態標籤樣式
+function getStatusClass(status) {
+  switch (status) {
+    case '報名中': return 'registering';
+    case '已額滿': return 'full';
+    case '已截止': return 'closed';
+    case '已結束': return 'ended';
+    default: return '';
+  }
+}
+
+// 取得狀態按鈕文字
 function getStatusButton(status) {
   switch (status) {
     case '報名中':
       return '<i class="bi bi-person-plus"></i> 立即報名';
+    case '已額滿':
+      return '<i class="bi bi-x-circle"></i> 已額滿';
     case '已截止':
-      return '<i class="bi bi-x-circle"></i> 報名截止';
+      return '<i class="bi bi-x-circle"></i> 已截止';
     case '已結束':
-      return '<i class="bi bi-check-circle"></i> 活動結束';
-    case '準備中':
-      return '<i class="bi bi-clock"></i> 尚未開放';
+      return '<i class="bi bi-check-circle"></i> 已結束';
     default:
       return status;
   }
 }
 
-// HTML 轉義函數
+// HTML 轉義
 function escapeHtml(unsafe) {
   return unsafe
     .replace(/&/g, "&amp;")
@@ -393,146 +485,8 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-        // 顯示報名表單
-        function showRegistrationForm(activityId) {
-            const modal = new bootstrap.Modal(document.getElementById('registrationModal'));
-            document.getElementById('registration-form').dataset.activityId = activityId;
-            modal.show();
-        }
-
-        // 提交報名
-        async function submitRegistration() {
-            const form = document.getElementById('registration-form');
-            const activityId = form.dataset.activityId;
-
-            const registrationData = {
-                activityId,
-                userId: userData.userId,
-                name: document.getElementById('reg-name').value,
-                phone: document.getElementById('reg-phone').value,
-                email: document.getElementById('reg-email').value,
-                note: document.getElementById('reg-note').value
-            };
-
-            try {
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'register',
-                        data: registrationData
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    alert('報名成功！');
-                    bootstrap.Modal.getInstance(document.getElementById('registrationModal')).hide();
-                    showActivities();
-                } else {
-                    alert(result.message || '報名失敗，請稍後再試。');
-                }
-            } catch (error) {
-                console.error('報名失敗：', error);
-                alert('報名失敗，請稍後再試。');
-            }
-        }
-
-        // 顯示個人報名清單
-        async function showMyRegistrations() {
-            const mainContent = document.getElementById('main-content');
-            mainContent.innerHTML = '<div class="loading">載入中...</div>';
-
-            try {
-                const response = await fetch(`${gasUrl}?action=getMyRegistrations&userId=${userData.userId}`);
-                const registrations = await response.json();
-
-                let html = `
-                    <h3>我的報名清單</h3>
-                    <div class="table-responsive">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>活動名稱</th>
-                                    <th>日期</th>
-                                    <th>狀態</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-
-                registrations.forEach(reg => {
-                    html += `
-                        <tr>
-                            <td>${reg.activityTitle}</td>
-                            <td>${reg.activityDate}</td>
-                            <td>${reg.status}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" 
-                                        onclick="editRegistration('${reg.id}')"
-                                        ${reg.canEdit ? '' : 'disabled'}>
-                                    修改
-                                </button>
-                                <button class="btn btn-sm btn-danger" 
-                                        onclick="cancelRegistration('${reg.id}')"
-                                        ${reg.canCancel ? '' : 'disabled'}>
-                                    取消報名
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                html += '</tbody></table></div>';
-                mainContent.innerHTML = html;
-            } catch (error) {
-                console.error('載入報名清單失敗：', error);
-                mainContent.innerHTML = '<div class="alert alert-danger">載入失敗，請重新整理頁面。</div>';
-            }
-        }
-
-        // 顯示管理面板
-        function showAdminPanel() {
-            if (!isAdmin) return;
-
-            const mainContent = document.getElementById('main-content');
-            let html = `
-                <h3>管理面板</h3>
-                <div class="row mb-4">
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">活動管理</h5>
-                                <button class="btn btn-primary" onclick="showActivityManagement()">管理活動</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">報名管理</h5>
-                                <button class="btn btn-primary" onclick="showRegistrationManagement()">管理報名</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">統計分析</h5>
-                                <button class="btn btn-primary" onclick="showStatistics()">查看統計</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            mainContent.innerHTML = html;
-        }
-
-        window.onload = initializeLiff;
+// 頁面載入完成後初始化
+window.onload = initializeLiff;
   </script>
 </body>
-
 </html>
