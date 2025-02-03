@@ -126,31 +126,83 @@
     <script>
         // 設定
         const liffId = '2001679903-r5VXNe5g';
-        const gasUrl = 'https://script.google.com/macros/s/AKfycbxbpc3ZPRK0zn8BFv-tI3NDEQO5MxL534nTzB7e9E0w4pmJkTRok2GEClP00t4zcmUk/exec';
+        const gasUrl = 'https://script.google.com/macros/s/AKfycbwJK3T6f34FSsa63K3vvUEt2Et76OUyT6VNceeFX_C0xrfKhjcMpnyHYcDp4RG11MN_/exec';
         let userData = null;
         let isAdmin = false;
 
-        // LIFF 初始化
-        async function initializeLiff() {
-            try {
-                await liff.init({ liffId });
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    const profile = await liff.getProfile();
-                    userData = {
-                        userId: profile.userId,
-                        displayName: profile.displayName
-                    };
-                    document.getElementById('user-info').textContent = `歡迎，${profile.displayName}`;
-                    checkAdminStatus();
-                    showActivities();
-                }
-            } catch (error) {
-                console.error('LIFF 初始化失敗：', error);
-                alert('系統初始化失敗，請重新整理頁面。');
-            }
+       // LIFF 初始化
+async function initializeLiff() {
+    try {
+        await liff.init({ liffId });
+        
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
         }
+        
+        try {
+            const profile = await liff.getProfile();
+            userData = {
+                userId: profile.userId,
+                displayName: profile.displayName,
+                pictureUrl: profile.pictureUrl
+            };
+            
+            // 記錄使用者登入
+            const loginResponse = await fetch(
+                `${gasUrl}?action=userLogin&userId=${profile.userId}&displayName=${encodeURIComponent(profile.displayName)}&pictureUrl=${encodeURIComponent(profile.pictureUrl || '')}`
+            );
+            
+            const loginResult = await loginResponse.json();
+            
+            if (loginResult.success) {
+                document.getElementById('user-info').innerHTML = `
+                    <div class="d-flex align-items-center">
+                        ${profile.pictureUrl ? 
+                            `<img src="${profile.pictureUrl}" class="rounded-circle me-2" style="width: 30px; height: 30px;">` 
+                            : ''
+                        }
+                        <span>歡迎，${profile.displayName}</span>
+                    </div>
+                `;
+                
+                isAdmin = loginResult.isAdmin;
+                if (isAdmin) {
+                    document.querySelectorAll('.admin-section').forEach(el => el.style.display = 'block');
+                }
+                
+                // 載入活動列表
+                await showActivities();
+                
+            } else {
+                throw new Error(loginResult.message || '登入處理失敗');
+            }
+            
+        } catch (error) {
+            console.error('處理使用者資料時發生錯誤：', error);
+            document.getElementById('user-info').innerHTML = `
+                <div class="text-danger">
+                    <i class="bi bi-exclamation-triangle"></i> 載入使用者資料失敗
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('LIFF 初始化失敗：', error);
+        document.getElementById('main-content').innerHTML = `
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">系統初始化失敗</h4>
+                <p>請檢查您的網路連線並重新整理頁面。如果問題持續發生，請聯繫系統管理員。</p>
+                <hr>
+                <p class="mb-0">
+                    <button class="btn btn-outline-danger" onclick="window.location.reload()">
+                        <i class="bi bi-arrow-clockwise"></i> 重新整理
+                    </button>
+                </p>
+            </div>
+        `;
+    }
+}
 
         // 檢查管理員權限
         async function checkAdminStatus() {
