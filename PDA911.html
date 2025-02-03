@@ -1,132 +1,156 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活動報名系統</title>
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        :root {
-            --primary-color: #00B900;
-            --secondary-color: #1E1E1E;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活動報名系統</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary-color: #00B900;
+      --secondary-color: #1E1E1E;
+    }
 
-        .navbar-brand {
-            color: var(--primary-color) !important;
-        }
+    .navbar-brand {
+      color: var(--primary-color) !important;
+    }
 
-        .btn-line {
-            background-color: var(--primary-color);
-            color: white;
-        }
+    .activity-card {
+      transition: transform 0.3s;
+    }
 
-        .btn-line:hover {
-            background-color: #009900;
-            color: white;
-        }
+    .activity-card:hover {
+      transform: translateY(-5px);
+    }
 
-        .activity-card {
-            transition: transform 0.3s;
-        }
+    .admin-section {
+      display: none;
+    }
 
-        .activity-card:hover {
-            transform: translateY(-5px);
-        }
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
 
-        .admin-section {
-            display: none;
-        }
+    .activity-card {
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-    </style>
+    .activity-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-line {
+      background-color: #00B900;
+      color: white;
+      border: none;
+    }
+
+    .btn-line:hover {
+      background-color: #009900;
+      color: white;
+    }
+
+    .btn-line:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
+
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="#">活動報名系統</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+  <!-- 在 body 標籤內的開始位置添加 -->
+  <div id="loading" class="loading" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">載入中...</span>
+    </div>
+  </div>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container">
+      <a class="navbar-brand" href="#">活動報名系統</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showActivities()">活動列表</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="showMyRegistrations()">我的報名</a>
-                    </li>
-                    <li class="nav-item admin-section">
-                        <a class="nav-link" href="#" onclick="showAdminPanel()">管理面板</a>
-                    </li>
-                </ul>
-                <span class="navbar-text" id="user-info">
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showActivities()">活動列表</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" onclick="showMyRegistrations()">我的報名</a>
+          </li>
+          <li class="nav-item admin-section">
+            <a class="nav-link" href="#" onclick="showAdminPanel()">管理面板</a>
+          </li>
+        </ul>
+        <span class="navbar-text" id="user-info">
                     載入中...
                 </span>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-        <div id="main-content">
-            <!-- 內容將由 JavaScript 動態載入 -->
-        </div>
+      </div>
     </div>
+  </nav>
 
-    <!-- 活動報名表單 Modal -->
-    <div class="modal fade" id="registrationModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">活動報名</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="registration-form">
-                        <div class="mb-3">
-                            <label class="form-label">姓名</label>
-                            <input type="text" class="form-control" id="reg-name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">電話</label>
-                            <input type="tel" class="form-control" id="reg-phone" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" id="reg-email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">備註</label>
-                            <textarea class="form-control" id="reg-note"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                    <button type="button" class="btn btn-line" onclick="submitRegistration()">確認報名</button>
-                </div>
-            </div>
-        </div>
+  <div class="container mt-4">
+    <div id="main-content">
+      <!-- 內容將由 JavaScript 動態載入 -->
     </div>
+  </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // 設定
+  <!-- 活動報名表單 Modal -->
+  <div class="modal fade" id="registrationModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">活動報名</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="registration-form">
+            <div class="mb-3">
+              <label class="form-label">姓名</label>
+              <input type="text" class="form-control" id="reg-name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">電話</label>
+              <input type="tel" class="form-control" id="reg-phone" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="reg-email" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">備註</label>
+              <textarea class="form-control" id="reg-note"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-line" onclick="submitRegistration()">確認報名</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // 設定
         const liffId = '2001679903-r5VXNe5g';
-        const gasUrl = 'https://script.google.com/macros/s/AKfycbwJK3T6f34FSsa63K3vvUEt2Et76OUyT6VNceeFX_C0xrfKhjcMpnyHYcDp4RG11MN_/exec';
+        const gasUrl = 'https://script.google.com/macros/s/AKfycbyziDhKohv6ZWiiPoTTGdToO_j8YXApmGhSZRicq5ghrVlVupI0XMvPs03s3oXjti-E/exec';
         let userData = null;
         let isAdmin = false;
 
@@ -218,45 +242,156 @@ async function initializeLiff() {
             }
         }
 
-        // 顯示活動列表
-        async function showActivities() {
-            const mainContent = document.getElementById('main-content');
-            mainContent.innerHTML = '<div class="loading">載入中...</div>';
+        // 全域變數
+let activities = [];
+let isLoading = false;
 
-            try {
-                const response = await fetch(`${gasUrl}?action=getActivities`);
-                const activities = await response.json();
+// 顯示活動列表
+async function showActivities() {
+  const mainContent = document.getElementById('main-content');
+  const loadingDiv = document.getElementById('loading');
+  
+  try {
+    isLoading = true;
+    loadingDiv.style.display = 'flex';
+    
+    // 從後端獲取活動資料
+    const response = await fetch(`${gasUrl}?action=getActivities`);
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || '載入活動失敗');
+    }
+    
+    activities = result.activities;
+    
+    // 顯示活動列表
+    mainContent.innerHTML = `
+      <div class="container py-4">
+        <div class="row">
+          <div class="col-12 mb-4">
+            <h2>活動列表</h2>
+            ${isAdmin ? `
+              <button class="btn btn-line" onclick="showCreateActivityForm()">
+                <i class="bi bi-plus-circle"></i> 新增活動
+              </button>
+            ` : ''}
+          </div>
+        </div>
+        <div class="row" id="activities-container">
+          ${activities.length > 0 ? renderActivities(activities) : `
+            <div class="col-12">
+              <div class="alert alert-info">
+                目前沒有活動
+              </div>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+    
+  } catch (error) {
+    console.error('載入活動時發生錯誤：', error);
+    mainContent.innerHTML = `
+      <div class="container py-4">
+        <div class="alert alert-danger">
+          <h4 class="alert-heading">載入失敗</h4>
+          <p>${error.message || '請稍後再試'}</p>
+          <hr>
+          <button class="btn btn-outline-danger" onclick="retryLoadActivities()">
+            <i class="bi bi-arrow-clockwise"></i> 重新載入
+          </button>
+        </div>
+      </div>
+    `;
+  } finally {
+    isLoading = false;
+    loadingDiv.style.display = 'none';
+  }
+}
 
-                let html = '<div class="row">';
-                activities.forEach(activity => {
-                    html += `
-                        <div class="col-md-4 mb-4">
-                            <div class="card activity-card">
-                                <div class="card-body">
-                                    <h5 class="card-title">${activity.title}</h5>
-                                    <p class="card-text">
-                                        <small class="text-muted">主辦單位：${activity.organizer}</small><br>
-                                        <small class="text-muted">日期：${activity.date}</small><br>
-                                        <small class="text-muted">報名截止：${activity.deadline}</small><br>
-                                        <small class="text-muted">報名狀況：${activity.currentParticipants}/${activity.maxParticipants}</small>
-                                    </p>
-                                    <button class="btn btn-line" 
-                                            onclick="showRegistrationForm('${activity.id}')"
-                                            ${activity.currentParticipants >= activity.maxParticipants ? 'disabled' : ''}>
-                                        ${activity.currentParticipants >= activity.maxParticipants ? '已額滿' : '立即報名'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += '</div>';
-                mainContent.innerHTML = html;
-            } catch (error) {
-                console.error('載入活動列表失敗：', error);
-                mainContent.innerHTML = '<div class="alert alert-danger">載入失敗，請重新整理頁面。</div>';
-            }
-        }
+// 重試載入活動
+function retryLoadActivities() {
+  if (!isLoading) {
+    showActivities();
+  }
+}
+
+// 渲染活動卡片
+function renderActivities(activities) {
+  return activities.map(activity => `
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card activity-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">${escapeHtml(activity.title)}</h5>
+          <p class="card-text">
+            <small class="text-muted">
+              <i class="bi bi-calendar"></i> ${activity.date}
+            </small>
+            <br>
+            <small class="text-muted">
+              <i class="bi bi-clock"></i> ${activity.startTime} - ${activity.endTime}
+            </small>
+            <br>
+            <small class="text-muted">
+              <i class="bi bi-geo-alt"></i> ${escapeHtml(activity.location)}
+            </small>
+          </p>
+          <p class="card-text">
+            ${escapeHtml(activity.description)}
+          </p>
+          <div class="progress mb-3">
+            <div class="progress-bar" role="progressbar" 
+              style="width: ${(activity.currentParticipants / activity.maxParticipants * 100)}%"
+              aria-valuenow="${activity.currentParticipants}"
+              aria-valuemin="0"
+              aria-valuemax="${activity.maxParticipants}">
+              ${activity.currentParticipants}/${activity.maxParticipants}
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-transparent">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              報名截止：${activity.deadline}
+            </small>
+            <button class="btn btn-sm btn-line" 
+              onclick="showRegistrationForm('${activity.activityId}')"
+              ${activity.status !== '報名中' ? 'disabled' : ''}>
+              ${getStatusButton(activity.status)}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 根據狀態返回按鈕文字
+function getStatusButton(status) {
+  switch (status) {
+    case '報名中':
+      return '<i class="bi bi-person-plus"></i> 立即報名';
+    case '已截止':
+      return '<i class="bi bi-x-circle"></i> 報名截止';
+    case '已結束':
+      return '<i class="bi bi-check-circle"></i> 活動結束';
+    case '準備中':
+      return '<i class="bi bi-clock"></i> 尚未開放';
+    default:
+      return status;
+  }
+}
+
+// HTML 轉義函數
+function escapeHtml(unsafe) {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
         // 顯示報名表單
         function showRegistrationForm(activityId) {
@@ -397,6 +532,7 @@ async function initializeLiff() {
         }
 
         window.onload = initializeLiff;
-    </script>
+  </script>
 </body>
+
 </html>
