@@ -4,12 +4,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>活動報名系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* 長者適用的樣式 */
+        /* 基本樣式 */
         body {
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1.6;
+            color: #333;
         }
         
         .container {
@@ -17,450 +20,409 @@
             padding: 20px;
         }
         
-        h2 {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
-        
-        h3 {
-            font-size: 24px;
-            margin-bottom: 20px;
+        /* 表單樣式 */
+        .form-control, .form-select {
+            margin-bottom: 15px;
         }
         
         .form-label {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
         }
         
-        .form-control, .form-select {
-            font-size: 18px;
-            padding: 12px;
-            height: auto;
+        /* 活動資訊區塊 */
+        .event-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .btn {
-            font-size: 20px;
-            padding: 12px 24px;
+        .event-info i {
+            width: 20px;
+            margin-right: 8px;
+            color: #0d6efd;
         }
         
+        /* LINE 分享按鈕 */
         .share-button {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
             background-color: #00B900;
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 8px;
-            font-size: 20px;
+            padding: 10px 20px;
+            border-radius: 6px;
             font-weight: bold;
+            transition: background-color 0.2s;
         }
         
         .share-button:hover {
             background-color: #009900;
+            color: white;
+            text-decoration: none;
         }
         
-        .event-info {
+        /* 攜伴表單 */
+        .companion-form {
             background-color: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            font-size: 18px;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
         }
         
-        .event-info i {
-            margin-right: 12px;
-            color: #666;
-            font-size: 20px;
-        }
-        
-        .registration-list {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .registration-list table {
-            font-size: 16px;
-        }
-        
+        /* 管理員面板 */
         .admin-panel {
             display: none;
             margin-top: 30px;
             padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 12px;
-        }
-        
-        .chart-container {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-        }
-        
-        /* 無障礙設計 */
-        .high-contrast {
-            color: #000;
             background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
-        .required-field::after {
-            content: "*";
-            color: red;
-            margin-left: 4px;
+        .stats-card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stats-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        
+        /* 圖表容器 */
+        .chart-container {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* 載入中動畫 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container mt-4">
+    <div class="container">
         <h2 class="text-center mb-4">活動報名系統</h2>
         
         <!-- 活動資訊區塊 -->
-        <div class="event-info mb-4">
+        <div class="event-info">
             <h3 class="mb-3">活動資訊</h3>
-            <div class="mb-3">
+            <div class="mb-2">
                 <i class="fas fa-calendar"></i>
                 <strong>活動時間：</strong>2025年2月14日(五) 09:00-12:00
             </div>
-            <div class="mb-3">
+            <div class="mb-2">
                 <i class="fas fa-map-marker-alt"></i>
                 <strong>活動地點：</strong>大坑步道(9號、9-1號路線)
             </div>
-            <div class="mb-3">
+            <div class="mb-2">
                 <i class="fas fa-info-circle"></i>
                 <strong>活動內容：</strong>大坑步道快樂走
             </div>
-            <div class="mb-3">
-                <i class="fas fa-users"></i>
-                <strong>目前報名人數：</strong><span id="currentRegistrations">0</span>人
-            </div>
-            <div class="mt-4">
+            <div class="mt-3">
                 <button type="button" class="share-button" id="shareButton">
                     <i class="fab fa-line"></i>
                     分享活動給好友
                 </button>
             </div>
         </div>
-
-        <!-- 報名清單 -->
-        <div class="registration-list">
-            <h3>最新報名名單</h3>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>報名時間</th>
-                            <th>姓名</th>
-                            <th>路線</th>
-                            <th>攜伴人數</th>
-                        </tr>
-                    </thead>
-                    <tbody id="registrationTableBody">
-                        <!-- 動態填充報名資料 -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+        
         <!-- 報名表單 -->
-        <div class="card mt-4">
-            <div class="card-body">
-                <form id="registrationForm">
-                    <div class="mb-4">
-                        <label class="form-label required-field">LINE 名稱</label>
-                        <input type="text" class="form-control" id="displayName" readonly>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label required-field">姓名</label>
-                        <input type="text" class="form-control" id="realName" required placeholder="請輸入真實姓名">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="form-label required-field">步道路線選擇</label>
-                        <select class="form-select" id="trailRoute" required>
-                            <option value="">請選擇路線</option>
-                            <option value="route9">大坑9號步道</option>
-                            <option value="route9-1">大坑9-1號步道</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label required-field">午餐選擇</label>
-                        <select class="form-select" id="mealOption" required>
-                            <option value="">請選擇用餐選項</option>
-                            <option value="meat">葷食</option>
-                            <option value="vegetarian">素食</option>
-                            <option value="none">不用餐</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label required-field">攜伴人數</label>
-                        <select class="form-select" id="companionCount" required>
-                            <option value="0">0人</option>
-                            <option value="1">1人</option>
-                            <option value="2">2人</option>
-                            <option value="3">3人</option>
-                            <option value="4">4人</option>
-                        </select>
-                    </div>
-
-                    <div id="companionList" class="companion-list mb-4">
-                        <!-- 動態生成的攜伴輸入欄位 -->
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label">備註</label>
-                        <textarea class="form-control" id="notes" rows="3" placeholder="如有特殊需求請在此說明"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary btn-lg w-100">提交報名</button>
-                </form>
+        <form id="registrationForm">
+            <div class="mb-3">
+                <label for="realName" class="form-label">姓名</label>
+                <input type="text" class="form-control" id="realName" required>
             </div>
+            
+            <div class="mb-3">
+                <label for="trailRoute" class="form-label">步道路線選擇</label>
+                <select class="form-select" id="trailRoute" required>
+                    <option value="">請選擇路線</option>
+                    <option value="9">9號步道</option>
+                    <option value="9-1">9-1號步道</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="mealOption" class="form-label">午餐選擇</label>
+                <select class="form-select" id="mealOption" required>
+                    <option value="">請選擇餐點</option>
+                    <option value="meat">葷食</option>
+                    <option value="vegetarian">素食</option>
+                    <option value="none">不用餐</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="companionCount" class="form-label">攜伴人數</label>
+                <select class="form-select" id="companionCount">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            
+            <!-- 攜伴資料區塊 -->
+            <div id="companionForms"></div>
+            
+            <button type="submit" class="btn btn-primary w-100">確認報名</button>
+        </form>
+        
+        <!-- 載入中動畫 -->
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p class="mt-2">處理中...</p>
         </div>
-
+        
         <!-- 管理員面板 -->
-        <div id="adminPanel" class="admin-panel">
-            <h3>管理員功能</h3>
+        <div class="admin-panel" id="adminPanel">
+            <h3>管理員面板</h3>
+            
+            <!-- 統計資訊 -->
             <div class="row">
-                <div class="col-md-6">
-                    <div class="chart-container">
-                        <canvas id="routeChart"></canvas>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalRegistrations">0</div>
+                        <div>總報名人數</div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="chart-container">
-                        <canvas id="mealChart"></canvas>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-number" id="totalParticipants">0</div>
+                        <div>總參與人數</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stats-card">
+                        <div class="stats-number" id="remainingSpots">0</div>
+                        <div>剩餘名額</div>
                     </div>
                 </div>
             </div>
-            <div class="mt-4">
-                <button class="btn btn-success" onclick="exportToExcel()">
-                    <i class="fas fa-file-excel"></i> 匯出報名資料
+            
+            <!-- 圖表區域 -->
+            <div class="chart-container">
+                <canvas id="registrationChart"></canvas>
+            </div>
+            
+            <!-- 管理員功能按鈕 -->
+            <div class="btn-group mb-3">
+                <button class="btn btn-primary" onclick="exportRegistrations()">
+                    <i class="fas fa-download"></i> 匯出報名資料
                 </button>
+                <button class="btn btn-info ms-2" onclick="refreshStats()">
+                    <i class="fas fa-sync"></i> 更新統計資料
+                </button>
+            </div>
+            
+            <!-- 管理員管理區塊 -->
+            <div class="admin-management mt-4">
+                <h4>管理員管理</h4>
+                <div class="card">
+                    <div class="card-body">
+                        <form id="addAdminForm" class="mb-4">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="newAdminUserId" 
+                                           placeholder="LINE User ID" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="text" class="form-control" id="newAdminName" 
+                                           placeholder="管理員名稱" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="newAdminNotes" 
+                                           placeholder="備註">
+                                </div>
+                                <div class="col-md-1">
+                                    <button type="submit" class="btn btn-primary">新增</button>
+                                </div>
+                            </div>
+                        </form>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>管理員名稱</th>
+                                        <th>LINE User ID</th>
+                                        <th>備註</th>
+                                        <th>新增時間</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminListBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let isAdmin = false;
+        // 全域變數
+        let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx9-ePv2STFGbxhuGXUhYLeo1tSYiCS-Fz3CAAQp7qJ_glEtu4cleqwpn8XTSl5i69BSA/exec';
+        let registrationChart = null;
         
-        // LIFF 初始化
-        liff.init({ liffId: "1656516134-VaGgmaPm" })
-            .then(() => {
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                } else {
-                    liff.getProfile()
-                        .then(profile => {
-                            document.getElementById('displayName').value = profile.displayName;
-                            checkAdminStatus(profile.userId);
-                            updateRegistrationList();
-                        });
-                }
-            });
-
-        // 檢查管理員權限
-        async function checkAdminStatus(userId) {
+        // 初始化 LIFF
+        async function initializeLiff() {
             try {
-                const response = await fetch(`https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=checkAdmin&userId=${userId}`);
-                const data = await response.json();
-                isAdmin = data.isAdmin;
-                if (isAdmin) {
+                await liff.init({ liffId: '您的LIFF ID' });
+                if (liff.isLoggedIn()) {
+                    checkAdminStatus();
+                } else {
+                    liff.login();
+                }
+            } catch (error) {
+                console.error('LIFF initialization failed:', error);
+            }
+        }
+        
+        // 檢查管理員權限
+        async function checkAdminStatus() {
+            try {
+                const profile = await liff.getProfile();
+                const response = await fetch(`${SCRIPT_URL}?action=checkAdmin&userId=${profile.userId}`);
+                const result = await response.json();
+                
+                if (result.isAdmin) {
                     document.getElementById('adminPanel').style.display = 'block';
-                    loadAdminData();
+                    updateAdminList();
+                    refreshStats();
                 }
             } catch (error) {
                 console.error('Error checking admin status:', error);
             }
         }
-
-        // 更新報名清單
-        async function updateRegistrationList() {
-            try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=getRegistrations');
-                const data = await response.json();
-                
-                const tableBody = document.getElementById('registrationTableBody');
-                tableBody.innerHTML = '';
-                
-                data.slice(-5).forEach(registration => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${new Date(registration['報名時間']).toLocaleString()}</td>
-                        <td>${registration['姓名']}</td>
-                        <td>${registration['步道路線']}</td>
-                        <td>${registration['攜伴人數']}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-                document.getElementById('currentRegistrations').textContent = data.length;
-            } catch (error) {
-                console.error('Error updating registration list:', error);
-            }
-        }
-
-        // 載入管理員資料
-        async function loadAdminData() {
-            try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=getRegistrations');
-                const data = await response.json();
-                
-                // 路線統計
-                const routeStats = {};
-                data.forEach(reg => {
-                    routeStats[reg['步道路線']] = (routeStats[reg['步道路線']] || 0) + 1;
-                });
-
-                // 餐點統計
-                const mealStats = {};
-                data.forEach(reg => {
-                    mealStats[reg['午餐選擇']] = (mealStats[reg['午餐選擇']] || 0) + 1;
-                });
-
-                // 繪製圖表
-                createChart('routeChart', '步道路線分布', routeStats);
-                createChart('mealChart', '餐點選擇分布', mealStats);
-            } catch (error) {
-                console.error('Error loading admin data:', error);
-            }
-        }
-
-        // 建立圖表
-        function createChart(canvasId, title, data) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: Object.keys(data),
-                    datasets: [{
-                        data: Object.values(data),
-                        backgroundColor: [
-                            '#FF6384',
-                            '#36A2EB',
-                            '#FFCE56',
-                            '#4BC0C0'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: title
-                        }
-                    }
-                }
-            });
-        }
-
-        // 匯出 Excel
-        function exportToExcel() {
-            window.location.href = 'https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=exportExcel';
-        }
-
-        // 處理攜伴人數變更
-        document.getElementById('companionCount').addEventListener('change', function(e) {
-            const count = parseInt(e.target.value);
-            const companionList = document.getElementById('companionList');
-            companionList.innerHTML = '';
-
-            if (count > 0) {
-                companionList.classList.add('show');
-                for (let i = 1; i <= count; i++) {
-                    const companionDiv = document.createElement('div');
-                    companionDiv.className = 'mb-4';
-                    companionDiv.innerHTML = `
-                        <label class="form-label required-field">攜伴 ${i} 姓名</label>
-                        <input type="text" class="form-control" name="companion${i}" required>
-                        <div class="mt-3">
-                            <label class="form-label required-field">攜伴 ${i} 午餐選擇</label>
-                            <select class="form-select" name="companionMeal${i}" required>
-                                <option value="">請選擇用餐選項</option>
-                                <option value="meat">葷食</option>
-                                <option value="vegetarian">素食</option>
-                                <option value="none">不用餐</option>
-                            </select>
-                        </div>
-                    `;
-                    companionList.appendChild(companionDiv);
-                }
-            } else {
-                companionList.classList.remove('show');
-            }
-        });
-
-        // 表單提交處理
-        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        
+        // 更新攜伴表單
+        function updateCompanionForms() {
+            const count = parseInt(document.getElementById('companionCount').value);
+            const container = document.getElementById('companionForms');
+            container.innerHTML = '';
             
-            const formData = {
-                displayName: document.getElementById('displayName').value,
-                realName: document.getElementById('realName').value,
-                trailRoute: document.getElementById('trailRoute').value,
-                mealOption: document.getElementById('mealOption').value,
-                companionCount: document.getElementById('companionCount').value,
-                notes: document.getElementById('notes').value,
-                companions: []
-            };
-
-            const count = parseInt(formData.companionCount);
-            for (let i = 1; i <= count; i++) {
-                formData.companions.push({
-                    name: document.querySelector(`input[name="companion${i}"]`).value,
-                    meal: document.querySelector(`select[name="companionMeal${i}"]`).value
-                });
+            for (let i = 0; i < count; i++) {
+                const form = document.createElement('div');
+                form.className = 'companion-form';
+                form.innerHTML = `
+                    <h5>攜伴 ${i + 1} 資料</h5>
+                    <div class="mb-3">
+                        <label class="form-label">姓名</label>
+                        <input type="text" class="form-control companion-name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">午餐選擇</label>
+                        <select class="form-select companion-meal" required>
+                            <option value="">請選擇餐點</option>
+                            <option value="meat">葷食</option>
+                            <option value="vegetarian">素食</option>
+                            <option value="none">不用餐</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(form);
             }
-
+        }
+        
+        // 處理報名表單提交
+        async function handleRegistration(event) {
+            event.preventDefault();
+            
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+            
             try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec', {
+                const profile = await liff.getProfile();
+                
+                const companions = [];
+                const companionForms = document.getElementsByClassName('companion-form');
+                for (let form of companionForms) {
+                    companions.push({
+                        name: form.querySelector('.companion-name').value,
+                        meal: form.querySelector('.companion-meal').value
+                    });
+                }
+                
+                const formData = {
+                    userId: profile.userId,
+                    displayName: profile.displayName,
+                    realName: document.getElementById('realName').value,
+                    trailRoute: document.getElementById('trailRoute').value,
+                    mealOption: document.getElementById('mealOption').value,
+                    companionCount: companions.length,
+                    companions: companions
+                };
+                
+                const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify(formData)
                 });
-
-                if (response.ok) {
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
                     alert('報名成功！');
                     document.getElementById('registrationForm').reset();
-                    document.getElementById('displayName').value = formData.displayName;
-                    updateRegistrationList();
-                    if (isAdmin) {
-                        loadAdminData();
-                    }
+                    updateCompanionForms();
                 } else {
-                    alert('報名失敗，請稍後再試。');
+                    alert(result.message || '報名失敗，請稍後再試。');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('發生錯誤，請稍後再試。');
+                console.error('Registration error:', error);
+                alert('報名發生錯誤，請稍後再試。');
+            } finally {
+                loading.style.display = 'none';
             }
-        });
-
-        // 分享按鈕處理
-        document.getElementById('shareButton').addEventListener('click', () => {
-            if (liff.isApiAvailable('shareTargetPicker')) {
-                liff.shareTargetPicker([
+        }
+        
+        // 分享功能
+        async function shareEvent() {
+            if (!liff.isApiAvailable('shareTargetPicker')) {
+                alert('此裝置不支援分享功能');
+                return;
+            }
+            
+            try {
+                const result = await liff.shareTargetPicker([
                     {
                         type: "flex",
-                        altText: "活動邀請：大坑步道快樂走",
+                        altText: "大坑步道快樂走活動邀請",
                         contents: {
                             type: "bubble",
                             hero: {
                                 type: "image",
-                                url: "https://example.com/event-image.jpg",
+                                url: "您的活動圖片網址",
                                 size: "full",
                                 aspectRatio: "20:13",
                                 aspectMode: "cover"
@@ -495,7 +457,7 @@
                                                     },
                                                     {
                                                         type: "text",
-                                                        text: "2025年2月14日 09:00-12:00",
+                                                        text: "2025年2月14日(五) 09:00-12:00",
                                                         wrap: true,
                                                         color: "#666666",
                                                         size: "sm",
@@ -541,7 +503,7 @@
                                         action: {
                                             type: "uri",
                                             label: "立即報名",
-                                            uri: liff.permanentLink.createUrl()
+                                            uri: "您的LIFF網址"
                                         }
                                     }
                                 ],
@@ -550,7 +512,92 @@
                         }
                     }
                 ]);
+                
+                if (result) {
+                    alert('分享成功！');
+                }
+            } catch (error) {
+                console.error('Sharing failed:', error);
+                alert('分享失敗，請稍後再試。');
             }
+        }
+        
+        // 更新統計資料
+        async function refreshStats() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getStats`);
+                const stats = await response.json();
+                
+                document.getElementById('totalRegistrations').textContent = stats.totalRegistrations;
+                document.getElementById('totalParticipants').textContent = stats.totalParticipants;
+                document.getElementById('remainingSpots').textContent = stats.remainingSpots;
+                
+                updateCharts(stats);
+            } catch (error) {
+                console.error('Error refreshing stats:', error);
+            }
+        }
+        
+        // 更新圖表
+        function updateCharts(stats) {
+            const ctx = document.getElementById('registrationChart').getContext('2d');
+            
+            if (registrationChart) {
+                registrationChart.destroy();
+            }
+            
+            registrationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(stats.dailyRegistrations),
+                    datasets: [{
+                        label: '每日報名人數',
+                        data: Object.values(stats.dailyRegistrations),
+                        borderColor: '#0d6efd',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '報名趨勢'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 匯出報名資料
+        async function exportRegistrations() {
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=exportExcel`);
+                const result = await response.json();
+                
+                const a = document.createElement('a');
+                a.href = result.fileUrl;
+                a.download = result.fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (error) {
+                console.error('Export error:', error);
+                alert('匯出失敗，請稍後再試。');
+            }
+        }
+        
+        // 事件監聽器設置
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeLiff();
+            
+            document.getElementById('companionCount').addEventListener('change', updateCompanionForms);
+            document.getElementById('registrationForm').addEventListener('submit', handleRegistration);
+            document.getElementById('shareButton').addEventListener('click', shareEvent);
+            document.getElementById('addAdminForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addNewAdmin();
+            });
         });
     </script>
 </body>
