@@ -6,6 +6,45 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <style>
+        /* 長者適用的樣式 */
+        body {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        h2 {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .form-control, .form-select {
+            font-size: 18px;
+            padding: 12px;
+            height: auto;
+        }
+        
+        .btn {
+            font-size: 20px;
+            padding: 12px 24px;
+        }
+        
         .share-button {
             display: flex;
             align-items: center;
@@ -14,52 +53,96 @@
             background-color: #00B900;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 20px;
             font-weight: bold;
         }
+        
         .share-button:hover {
             background-color: #009900;
         }
+        
         .event-info {
             background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-size: 18px;
         }
+        
         .event-info i {
-            margin-right: 8px;
+            margin-right: 12px;
             color: #666;
+            font-size: 20px;
         }
-        .companion-list {
+        
+        .registration-list {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .registration-list table {
+            font-size: 16px;
+        }
+        
+        .admin-panel {
             display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
         }
-        .companion-list.show {
-            display: block;
+        
+        .chart-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+        }
+        
+        /* 無障礙設計 */
+        .high-contrast {
+            color: #000;
+            background-color: #fff;
+        }
+        
+        .required-field::after {
+            content: "*";
+            color: red;
+            margin-left: 4px;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container mt-4">
-        <h2 class="text-center mb-4">活動報名表單</h2>
+        <h2 class="text-center mb-4">活動報名系統</h2>
         
         <!-- 活動資訊區塊 -->
         <div class="event-info mb-4">
             <h3 class="mb-3">活動資訊</h3>
-            <div class="mb-2">
+            <div class="mb-3">
                 <i class="fas fa-calendar"></i>
                 <strong>活動時間：</strong>2025年2月14日(五) 09:00-12:00
             </div>
-            <div class="mb-2">
+            <div class="mb-3">
                 <i class="fas fa-map-marker-alt"></i>
                 <strong>活動地點：</strong>大坑步道(9號、9-1號路線)
             </div>
-            <div class="mb-2">
+            <div class="mb-3">
                 <i class="fas fa-info-circle"></i>
                 <strong>活動內容：</strong>大坑步道快樂走
             </div>
-            <div class="mt-3">
+            <div class="mb-3">
+                <i class="fas fa-users"></i>
+                <strong>目前報名人數：</strong><span id="currentRegistrations">0</span>人
+            </div>
+            <div class="mt-4">
                 <button type="button" class="share-button" id="shareButton">
                     <i class="fab fa-line"></i>
                     分享活動給好友
@@ -67,18 +150,42 @@
             </div>
         </div>
 
+        <!-- 報名清單 -->
+        <div class="registration-list">
+            <h3>最新報名名單</h3>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>報名時間</th>
+                            <th>姓名</th>
+                            <th>路線</th>
+                            <th>攜伴人數</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registrationTableBody">
+                        <!-- 動態填充報名資料 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- 報名表單 -->
-        <div class="card">
+        <div class="card mt-4">
             <div class="card-body">
                 <form id="registrationForm">
-                    <div class="mb-3">
-                        <label class="form-label">LINE 名稱</label>
+                    <div class="mb-4">
+                        <label class="form-label required-field">LINE 名稱</label>
                         <input type="text" class="form-control" id="displayName" readonly>
                     </div>
                     
-                    <!-- 步道路線選擇 -->
-                    <div class="mb-3">
-                        <label class="form-label">步道路線選擇</label>
+                    <div class="mb-4">
+                        <label class="form-label required-field">姓名</label>
+                        <input type="text" class="form-control" id="realName" required placeholder="請輸入真實姓名">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label required-field">步道路線選擇</label>
                         <select class="form-select" id="trailRoute" required>
                             <option value="">請選擇路線</option>
                             <option value="route9">大坑9號步道</option>
@@ -86,9 +193,8 @@
                         </select>
                     </div>
 
-                    <!-- 午餐選擇 -->
-                    <div class="mb-3">
-                        <label class="form-label">午餐選擇</label>
+                    <div class="mb-4">
+                        <label class="form-label required-field">午餐選擇</label>
                         <select class="form-select" id="mealOption" required>
                             <option value="">請選擇用餐選項</option>
                             <option value="meat">葷食</option>
@@ -97,9 +203,8 @@
                         </select>
                     </div>
 
-                    <!-- 攜伴人數 -->
-                    <div class="mb-3">
-                        <label class="form-label">攜伴人數</label>
+                    <div class="mb-4">
+                        <label class="form-label required-field">攜伴人數</label>
                         <select class="form-select" id="companionCount" required>
                             <option value="0">0人</option>
                             <option value="1">1人</option>
@@ -109,32 +214,46 @@
                         </select>
                     </div>
 
-                    <!-- 攜伴名單（動態顯示） -->
-                    <div id="companionList" class="companion-list mb-3">
-                        <!-- 動態生成的攜伴輸入欄位將在這裡顯示 -->
+                    <div id="companionList" class="companion-list mb-4">
+                        <!-- 動態生成的攜伴輸入欄位 -->
                     </div>
 
-                    <!-- 備註 -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label">備註</label>
                         <textarea class="form-control" id="notes" rows="3" placeholder="如有特殊需求請在此說明"></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">提交報名</button>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">提交報名</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- 管理員面板 -->
+        <div id="adminPanel" class="admin-panel">
+            <h3>管理員功能</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="routeChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="mealChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button class="btn btn-success" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> 匯出報名資料
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // 活動資訊
-        const eventInfo = {
-            title: "大坑步道快樂走",
-            date: "2025年2月14日 09:00-12:00",
-            location: "大坑步道(9號、9-1號路線)",
-            description: "一起來大坑步道健行吧！"
-        };
-
+        let isAdmin = false;
+        
         // LIFF 初始化
         liff.init({ liffId: "1656516134-VaGgmaPm" })
             .then(() => {
@@ -144,26 +263,132 @@
                     liff.getProfile()
                         .then(profile => {
                             document.getElementById('displayName').value = profile.displayName;
+                            checkAdminStatus(profile.userId);
+                            updateRegistrationList();
                         });
                 }
             });
+
+        // 檢查管理員權限
+        async function checkAdminStatus(userId) {
+            try {
+                const response = await fetch(`https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=checkAdmin&userId=${userId}`);
+                const data = await response.json();
+                isAdmin = data.isAdmin;
+                if (isAdmin) {
+                    document.getElementById('adminPanel').style.display = 'block';
+                    loadAdminData();
+                }
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+            }
+        }
+
+        // 更新報名清單
+        async function updateRegistrationList() {
+            try {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=getRegistrations');
+                const data = await response.json();
+                
+                const tableBody = document.getElementById('registrationTableBody');
+                tableBody.innerHTML = '';
+                
+                data.slice(-5).forEach(registration => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(registration['報名時間']).toLocaleString()}</td>
+                        <td>${registration['姓名']}</td>
+                        <td>${registration['步道路線']}</td>
+                        <td>${registration['攜伴人數']}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                document.getElementById('currentRegistrations').textContent = data.length;
+            } catch (error) {
+                console.error('Error updating registration list:', error);
+            }
+        }
+
+        // 載入管理員資料
+        async function loadAdminData() {
+            try {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=getRegistrations');
+                const data = await response.json();
+                
+                // 路線統計
+                const routeStats = {};
+                data.forEach(reg => {
+                    routeStats[reg['步道路線']] = (routeStats[reg['步道路線']] || 0) + 1;
+                });
+
+                // 餐點統計
+                const mealStats = {};
+                data.forEach(reg => {
+                    mealStats[reg['午餐選擇']] = (mealStats[reg['午餐選擇']] || 0) + 1;
+                });
+
+                // 繪製圖表
+                createChart('routeChart', '步道路線分布', routeStats);
+                createChart('mealChart', '餐點選擇分布', mealStats);
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+            }
+        }
+
+        // 建立圖表
+        function createChart(canvasId, title, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#FFCE56',
+                            '#4BC0C0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: title
+                        }
+                    }
+                }
+            });
+        }
+
+        // 匯出 Excel
+        function exportToExcel() {
+            window.location.href = 'https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec?action=exportExcel';
+        }
 
         // 處理攜伴人數變更
         document.getElementById('companionCount').addEventListener('change', function(e) {
             const count = parseInt(e.target.value);
             const companionList = document.getElementById('companionList');
-            companionList.innerHTML = ''; // 清空現有的欄位
+            companionList.innerHTML = '';
 
             if (count > 0) {
                 companionList.classList.add('show');
                 for (let i = 1; i <= count; i++) {
                     const companionDiv = document.createElement('div');
-                    companionDiv.className = 'mb-3';
+                    companionDiv.className = 'mb-4';
                     companionDiv.innerHTML = `
-                        <label class="form-label">攜伴 ${i} 姓名</label>
+                        <label class="form-label required-field">攜伴 ${i} 姓名</label>
                         <input type="text" class="form-control" name="companion${i}" required>
-                        <div class="mt-2">
-                            <label class="form-label">攜伴 ${i} 午餐選擇</label>
+                        <div class="mt-3">
+                            <label class="form-label required-field">攜伴 ${i} 午餐選擇</label>
                             <select class="form-select" name="companionMeal${i}" required>
                                 <option value="">請選擇用餐選項</option>
                                 <option value="meat">葷食</option>
@@ -183,9 +408,9 @@
         document.getElementById('registrationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // 收集表單資料
             const formData = {
                 displayName: document.getElementById('displayName').value,
+                realName: document.getElementById('realName').value,
                 trailRoute: document.getElementById('trailRoute').value,
                 mealOption: document.getElementById('mealOption').value,
                 companionCount: document.getElementById('companionCount').value,
@@ -193,7 +418,6 @@
                 companions: []
             };
 
-            // 收集攜伴資料
             const count = parseInt(formData.companionCount);
             for (let i = 1; i <= count; i++) {
                 formData.companions.push({
@@ -203,7 +427,7 @@
             }
 
             try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbyuoZVxN9XYOEUTGdtG1H9jOpY_GFyL4T687oPazgIEEqzKlOAJOsW7h2qBjVgusH7bIg/exec', {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxCvtKW2Yptek9TzrabItC4Jl-goNcPh6d8LfbueQIc-x-vPQ2L8mXE7xfbPSy_qtX3KQ/exec', {
                     method: 'POST',
                     body: JSON.stringify(formData)
                 });
@@ -211,6 +435,11 @@
                 if (response.ok) {
                     alert('報名成功！');
                     document.getElementById('registrationForm').reset();
+                    document.getElementById('displayName').value = formData.displayName;
+                    updateRegistrationList();
+                    if (isAdmin) {
+                        loadAdminData();
+                    }
                 } else {
                     alert('報名失敗，請稍後再試。');
                 }
@@ -226,12 +455,12 @@
                 liff.shareTargetPicker([
                     {
                         type: "flex",
-                        altText: "活動邀請：" + eventInfo.title,
+                        altText: "活動邀請：大坑步道快樂走",
                         contents: {
                             type: "bubble",
                             hero: {
                                 type: "image",
-                                url: "https://example.com/event-image.jpg", // 替換為您的活動圖片
+                                url: "https://example.com/event-image.jpg",
                                 size: "full",
                                 aspectRatio: "20:13",
                                 aspectMode: "cover"
@@ -242,7 +471,7 @@
                                 contents: [
                                     {
                                         type: "text",
-                                        text: eventInfo.title,
+                                        text: "大坑步道快樂走",
                                         weight: "bold",
                                         size: "xl"
                                     },
@@ -266,7 +495,7 @@
                                                     },
                                                     {
                                                         type: "text",
-                                                        text: eventInfo.date,
+                                                        text: "2025年2月14日 09:00-12:00",
                                                         wrap: true,
                                                         color: "#666666",
                                                         size: "sm",
@@ -288,7 +517,7 @@
                                                     },
                                                     {
                                                         type: "text",
-                                                        text: eventInfo.location,
+                                                        text: "大坑步道(9號、9-1號路線)",
                                                         wrap: true,
                                                         color: "#666666",
                                                         size: "sm",
