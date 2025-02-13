@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汽車保養報價單系統</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .service-item {
+            margin: 10px 0;
+        }
+        #quotationResult {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center mb-4">汽車保養報價單</h2>
+        
+        <div class="mb-3">
+            <label class="form-label">客戶姓名：</label>
+            <input type="text" class="form-control" id="customerName" readonly>
+        </div>
+
+        <div class="service-items">
+            <h4>保養項目</h4>
+            <div class="form-check service-item">
+                <input class="form-check-input" type="checkbox" value="1500" id="engineOil">
+                <label class="form-check-label" for="engineOil">
+                    機油更換 - NT$1,500
+                </label>
+            </div>
+            <div class="form-check service-item">
+                <input class="form-check-input" type="checkbox" value="800" id="oilFilter">
+                <label class="form-check-label" for="oilFilter">
+                    機油濾清器更換 - NT$800
+                </label>
+            </div>
+            <div class="form-check service-item">
+                <input class="form-check-input" type="checkbox" value="1200" id="airFilter">
+                <label class="form-check-label" for="airFilter">
+                    空氣濾清器更換 - NT$1,200
+                </label>
+            </div>
+            <div class="form-check service-item">
+                <input class="form-check-input" type="checkbox" value="2500" id="brakeService">
+                <label class="form-check-label" for="brakeService">
+                    煞車系統保養 - NT$2,500
+                </label>
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-3" onclick="calculateQuotation()">產生報價單</button>
+
+        <div id="quotationResult">
+            <h4>報價單明細</h4>
+            <div id="serviceList"></div>
+            <hr>
+            <div class="d-flex justify-content-between">
+                <strong>總金額：</strong>
+                <span id="totalAmount"></span>
+            </div>
+            <div class="mt-3">
+                <h5>匯款資訊</h5>
+                <p>銀行：國泰世華銀行<br>
+                   帳號：1234-5678-9012-3456<br>
+                   戶名：汽車保養中心</p>
+            </div>
+            <button class="btn btn-success mt-3" onclick="confirmQuotation()">確認報價單</button>
+        </div>
+    </div>
+
+    <script>
+        let userId = '';
+        let userName = '';
+
+        // 初始化 LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: "2006181829-l81j2YrD" });
+                if (liff.isLoggedIn()) {
+                    const profile = await liff.getProfile();
+                    userId = profile.userId;
+                    userName = profile.displayName;
+                    document.getElementById('customerName').value = userName;
+                } else {
+                    liff.login();
+                }
+            } catch (err) {
+                console.error('LIFF 初始化失敗', err);
+            }
+        }
+
+        // 計算報價單
+        function calculateQuotation() {
+            let total = 0;
+            let serviceListHtml = '';
+            const services = document.querySelectorAll('.service-item input:checked');
+            
+            services.forEach(service => {
+                const amount = parseInt(service.value);
+                const serviceName = service.nextElementSibling.textContent.split('-')[0].trim();
+                total += amount;
+                serviceListHtml += `<div class="d-flex justify-content-between">
+                    <span>${serviceName}</span>
+                    <span>NT$${amount}</span>
+                </div>`;
+            });
+
+            document.getElementById('serviceList').innerHTML = serviceListHtml;
+            document.getElementById('totalAmount').textContent = `NT$${total}`;
+            document.getElementById('quotationResult').style.display = 'block';
+        }
+
+        // 確認報價單
+        async function confirmQuotation() {
+            const services = Array.from(document.querySelectorAll('.service-item input:checked'))
+                .map(service => ({
+                    name: service.nextElementSibling.textContent.split('-')[0].trim(),
+                    price: parseInt(service.value)
+                }));
+
+            const totalAmount = services.reduce((sum, service) => sum + service.price, 0);
+
+            // 呼叫 Google Apps Script
+            const gasUrl = 'https://script.google.com/macros/s/AKfycbwJUgimmSw01L6Ut8CfyoPVp856idFPt6woqhlpqcsqAvWu2QI8Bw2c-Bv6hv3z_k7R/exec';
+            const data = {
+                userId: userId,
+                customerName: userName,
+                services: services,
+                totalAmount: totalAmount,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('報價單已確認並儲存！');
+                    // 可以選擇關閉 LIFF 視窗
+                    liff.closeWindow();
+                } else {
+                    throw new Error('儲存失敗');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('發生錯誤，請稍後再試！');
+            }
+        }
+
+        // 初始化
+        initializeLiff();
+    </script>
+</body>
+</html>
