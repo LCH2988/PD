@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta property="og:title" content="汽車保養報價單">
-    <meta property="og:description" content="查看您的汽車保養報價明細">
     <title>汽車保養報價單系統</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -13,20 +11,34 @@
             max-width: 800px;
             margin: 20px auto;
         }
-        .service-table {
+        .service-list {
             margin: 20px 0;
         }
-        .service-table th {
-            background-color: #f8f9fa;
-            position: sticky;
-            top: 0;
-            z-index: 1;
+        .service-item {
+            background: #f8f9fa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .quotation-card {
+        .service-item input {
+            margin: 0 5px;
+        }
+        .service-item .remove-btn {
+            color: red;
+            cursor: pointer;
+        }
+        .add-service-form {
             background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .total-amount {
+            font-size: 1.2em;
+            font-weight: bold;
             margin: 20px 0;
         }
         .required::after {
@@ -34,402 +46,365 @@
             color: red;
             margin-left: 4px;
         }
-        .share-buttons {
-            display: flex;
-            gap: 10px;
-            margin: 15px 0;
-        }
-        .share-button {
-            padding: 8px 15px;
-            border-radius: 5px;
-            border: none;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .share-line {
-            background-color: #00B900;
-        }
-        .share-copy {
-            background-color: #6c757d;
-        }
-        #quotationResult {
-            display: none;
-        }
-        .confirmation-status {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-        }
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .status-confirmed {
-            background-color: #d4edda;
-            color: #155724;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 class="text-center mb-4">駿朔汽車保養報價單</h2>
+        <h2 class="mb-4">汽車保養報價單</h2>
         
-        <!-- 客戶資訊表單 -->
+        <!-- 基本資訊 -->
         <div class="card mb-4">
             <div class="card-body">
-                <h4>客戶資訊</h4>
+                <h5 class="card-title">基本資訊</h5>
                 <div class="mb-3">
-                    <label class="form-label">LINE 用戶名稱：</label>
-                    <input type="text" class="form-control" id="lineName" readonly>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label required">車牌號碼：</label>
+                    <label for="carNumber" class="form-label required">車牌號碼</label>
                     <input type="text" class="form-control" id="carNumber" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">客戶姓名：</label>
+                    <label for="customerName" class="form-label">客戶姓名</label>
                     <input type="text" class="form-control" id="customerName">
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">手機號碼：</label>
-                    <input type="tel" class="form-control" id="phoneNumber">
-                </div>
             </div>
         </div>
 
-        <!-- 固定服務項目表格 -->
+        <!-- 保養項目清單 -->
         <div class="card mb-4">
             <div class="card-body">
-                <h4>保養項目</h4>
-                <div class="table-responsive">
-                    <table class="table service-table">
-                        <thead>
-                            <tr>
-                                <th>項目名稱</th>
-                                <th>單價</th>
-                                <th>數量</th>
-                                <th>小計</th>
-                            </tr>
-                        </thead>
-                        <tbody id="serviceTableBody"></tbody>
-                    </table>
+                <h5 class="card-title">保養項目</h5>
+                
+                <!-- 新增項目表單 -->
+                <div class="add-service-form mb-3">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="newServiceName" placeholder="項目名稱">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="newServicePrice" placeholder="單價">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="newServiceQuantity" placeholder="數量" value="1">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="addService()">新增</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 項目列表 -->
+                <div id="serviceList" class="service-list"></div>
+
+                <!-- 總金額 -->
+                <div class="total-amount">
+                    總計: <span id="totalAmount">0</span> 元
                 </div>
             </div>
         </div>
 
-        <button class="btn btn-primary" onclick="generateQuotation()">產生報價單</button>
-
-        <!-- 報價單結果 -->
-        <div id="quotationResult" class="quotation-card">
-            <h3 class="text-center mb-4">報價單</h3>
-            
-            <div class="customer-info mb-4">
-                <p><strong>車牌號碼：</strong><span id="result-carNumber"></span></p>
-                <p><strong>客戶姓名：</strong><span id="result-customerName"></span></p>
-                <p><strong>聯絡電話：</strong><span id="result-phoneNumber"></span></p>
-                <p><strong>報價日期：</strong><span id="result-date"></span></p>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>項目</th>
-                            <th>數量</th>
-                            <th>單價</th>
-                            <th>小計</th>
-                        </tr>
-                    </thead>
-                    <tbody id="result-serviceList"></tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="3" class="text-end"><strong>總計：</strong></td>
-                            <td id="result-totalAmount"></td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div class="bank-info mt-4">
-                <h5>匯款資訊</h5>
-                <p>銀行：國泰世華銀行<br>
-                   帳號：1234-5678-9012-3456<br>
-                   戶名：汽車保養中心</p>
-            </div>
-
-            <div class="confirmation-status status-pending" id="confirmationStatus">
-                等待客戶確認中
-            </div>
-
-            <div class="share-buttons">
-                <button class="share-button share-line" onclick="shareToLine()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" height="20">
-                    分享到 LINE
-                </button>
-                <button class="share-button share-copy" onclick="copyQuotationLink()">
-                    <i class="bi bi-clipboard"></i>
-                    複製連結
-                </button>
-            </div>
-
-            <button class="btn btn-success w-100 mt-3" onclick="confirmQuotation()" id="confirmButton">
-                確認報價單
-            </button>
+        <!-- 操作按鈕 -->
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" onclick="shareToLine()">分享到 LINE</button>
+            <button class="btn btn-secondary" onclick="saveQuotation()">儲存報價單</button>
         </div>
     </div>
 
     <script>
-        let userId = '';
-        let userName = '';
-        let quotationId = '';
-        const defaultServices = [
-            { id: 1, name: '機油更換', price: 1500, quantity: 0 },
-            { id: 2, name: '機油濾清器更換', price: 800, quantity: 0 },
-            { id: 3, name: '空氣濾清器更換', price: 1200, quantity: 0 },
-            { id: 4, name: '煞車系統保養', price: 2500, quantity: 0 },
-            { id: 5, name: '輪胎更換', price: 3000, quantity: 0 },
-            { id: 6, name: '冷氣系統檢查', price: 1000, quantity: 0 },
-            { id: 7, name: '電瓶更換', price: 2800, quantity: 0 },
-            { id: 8, name: '底盤系統檢修', price: 2000, quantity: 0 }
-        ];
+        let services = [];
+        let quotationId = null;
 
         // 初始化 LIFF
         async function initializeLiff() {
             try {
                 await liff.init({ liffId: "2006181829-l81j2YrD" });
-                if (liff.isLoggedIn()) {
-                    const profile = await liff.getProfile();
-                    userId = profile.userId;
-                    userName = profile.displayName;
-                    document.getElementById('lineName').value = userName;
-                } else {
-                    liff.login();
-                }
+                console.log('LIFF 初始化成功');
             } catch (err) {
-                console.error('LIFF 初始化失敗', err);
-            }
-            renderServiceTable();
-            
-            // 檢查 URL 參數是否包含報價單 ID
-            const urlParams = new URLSearchParams(window.location.search);
-            const qId = urlParams.get('id');
-            if (qId) {
-                loadQuotation(qId);
+                console.error('LIFF 初始化失敗:', err);
+                alert('初始化失敗，請重新載入頁面');
             }
         }
 
-        // 渲染服務項目表格
-        function renderServiceTable() {
-            const tbody = document.getElementById('serviceTableBody');
-            tbody.innerHTML = defaultServices.map(service => `
-                <tr>
-                    <td>${service.name}</td>
-                    <td>NT$${service.price}</td>
-                    <td>
-                        <input type="number" class="form-control" 
-                               value="${service.quantity}" min="0"
-                               onchange="updateQuantity(${service.id}, this.value)">
-                    </td>
-                    <td>NT$${service.price * service.quantity}</td>
-                </tr>
+        // 新增服務項目
+        function addService() {
+            const name = document.getElementById('newServiceName').value;
+            const price = parseFloat(document.getElementById('newServicePrice').value);
+            const quantity = parseInt(document.getElementById('newServiceQuantity').value);
+
+            if (!name || isNaN(price) || isNaN(quantity)) {
+                alert('請填寫完整的項目資訊');
+                return;
+            }
+
+            services.push({ name, price, quantity });
+            renderServiceList();
+            clearNewServiceForm();
+            updateTotal();
+        }
+
+        // 清除新增表單
+        function clearNewServiceForm() {
+            document.getElementById('newServiceName').value = '';
+            document.getElementById('newServicePrice').value = '';
+            document.getElementById('newServiceQuantity').value = '1';
+        }
+
+        // 移除服務項目
+        function removeService(index) {
+            services.splice(index, 1);
+            renderServiceList();
+            updateTotal();
+        }
+
+        // 渲染服務列表
+        function renderServiceList() {
+            const listElement = document.getElementById('serviceList');
+            listElement.innerHTML = services.map((service, index) => `
+                <div class="service-item">
+                    <span>${service.name}</span>
+                    <span>${service.price}元</span>
+                    <input type="number" value="${service.quantity}" 
+                        onchange="updateQuantity(${index}, this.value)" 
+                        min="1" style="width: 60px">
+                    <span>${service.price * service.quantity}元</span>
+                    <span class="remove-btn" onclick="removeService(${index})">✕</span>
+                </div>
             `).join('');
         }
 
         // 更新數量
-        function updateQuantity(id, value) {
-            const service = defaultServices.find(s => s.id === id);
-            if (service) {
-                service.quantity = parseInt(value) || 0;
-                renderServiceTable();
-            }
-        }
-
-        // 產生報價單
-        function generateQuotation() {
-            const carNumber = document.getElementById('carNumber').value;
-            if (!carNumber) {
-                alert('請輸入車牌號碼！');
-                return;
-            }
-
-            quotationId = generateQuotationId();
-            const customerName = document.getElementById('customerName').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-
-            // 計算總金額和產生服務列表
-            let totalAmount = 0;
-            const serviceListHtml = defaultServices
-                .filter(service => service.quantity > 0)
-                .map(service => {
-                    const subtotal = service.price * service.quantity;
-                    totalAmount += subtotal;
-                    return `
-                        <tr>
-                            <td>${service.name}</td>
-                            <td>${service.quantity}</td>
-                            <td>NT$${service.price}</td>
-                            <td>NT$${subtotal}</td>
-                        </tr>
-                    `;
-                }).join('');
-
-            // 顯示報價單
-            document.getElementById('result-carNumber').textContent = carNumber;
-            document.getElementById('result-customerName').textContent = customerName || '未提供';
-            document.getElementById('result-phoneNumber').textContent = phoneNumber || '未提供';
-            document.getElementById('result-date').textContent = new Date().toLocaleDateString();
-            document.getElementById('result-serviceList').innerHTML = serviceListHtml;
-            document.getElementById('result-totalAmount').textContent = `NT$${totalAmount}`;
-            document.getElementById('quotationResult').style.display = 'block';
-
-            // 儲存報價單資料
-            saveQuotation();
-        }
-
-        // 生成報價單 ID
-        function generateQuotationId() {
-            return 'Q' + Date.now().toString(36).toUpperCase();
-        }
-
-        // 分享到 LINE
-        // 更新分享到 LINE 函數
-async function shareToLine() {
-  try {
-    // 獲取 Flex Message 格式的報價單
-    const response = await fetch(`https://script.google.com/macros/s/AKfycbwMZUZWD9kRyIqS7JNOJFvzGpfFo8FFg7Ioyt0zhhc5f8tAu6V09S5SiWGWFo27KWE-/exec?id=${quotationId}&format=flex`);
-    if (!response.ok) throw new Error('獲取報價單失敗');
-    
-    const data = await response.json();
-    
-    if (liff.isApiAvailable('shareTargetPicker')) {
-      try {
-        await liff.shareTargetPicker([data.flexMessage]);
-        alert('報價單已分享');
-      } catch (error) {
-        console.error('分享失敗:', error);
-        alert('分享失敗，請稍後再試');
-      }
-    } else {
-      alert('此裝置不支援分享功能');
-    }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('發生錯誤，請稍後再試');
-  }
-}
-        // 複製報價單連結
-        function copyQuotationLink() {
-            const quotationUrl = `${window.location.origin}${window.location.pathname}?id=${quotationId}`;
-            navigator.clipboard.writeText(quotationUrl)
-                .then(() => alert('連結已複製到剪貼簿'))
-                .catch(err => console.error('複製失敗:', err));
-        }
-
-        // 儲存報價單
-        async function saveQuotation() {
-            const data = {
-                quotationId: quotationId,
-                userId: userId,
-                lineName: userName,
-                carNumber: document.getElementById('carNumber').value,
-                customerName: document.getElementById('customerName').value,
-                phoneNumber: document.getElementById('phoneNumber').value,
-                services: defaultServices.filter(s => s.quantity > 0),
-                totalAmount: calculateTotal(),
-                status: 'pending',
-                timestamp: new Date().toISOString()
-            };
-
-            try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbwMZUZWD9kRyIqS7JNOJFvzGpfFo8FFg7Ioyt0zhhc5f8tAu6V09S5SiWGWFo27KWE-/exec', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-
-                if (!response.ok) {
-                    throw new Error('儲存失敗');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('儲存報價單時發生錯誤');
-            }
-        }
-
-        // 載入報價單
-        async function loadQuotation(id) {
-            try {
-                const response = await fetch(`https://script.google.com/macros/s/AKfycbwMZUZWD9kRyIqS7JNOJFvzGpfFo8FFg7Ioyt0zhhc5f8tAu6V09S5SiWGWFo27KWE-/exec?id=${id}`);
-                if (!response.ok) throw new Error('載入失敗');
-                
-                const data = await response.json();
-                // 填充報價單資料
-                document.getElementById('carNumber').value = data.carNumber;
-                document.getElementById('customerName').value = data.customerName;
-                document.getElementById('phoneNumber').value = data.phoneNumber;
-                
-                // 更新服務項目
-                data.services.forEach(service => {
-                    const existingService = defaultServices.find(s => s.id === service.id);
-                    if (existingService) {
-                        existingService.quantity = service.quantity;
-                    }
-                });
-                
-                renderServiceTable();
-                generateQuotation();
-                
-                // 更新確認狀態
-                if (data.status === 'confirmed') {
-                    document.getElementById('confirmationStatus').className = 
-                        'confirmation-status status-confirmed';
-                    document.getElementById('confirmationStatus').textContent = '客戶已確認';
-                    document.getElementById('confirmButton').style.display = 'none';
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('載入報價單時發生錯誤');
-            }
-        }
-
-        // 確認報價單
-        async function confirmQuotation() {
-            try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbzonDeWEdIrC-5uJN9OyoCAcigxUPxnGHAUorzYBd1PkM-INw_NMvRbh0ZRKg1C4yJI/exec', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        quotationId: quotationId,
-                        status: 'confirmed'
-                    })
-                });
-
-                if (response.ok) {
-                    document.getElementById('confirmationStatus').className = 
-                        'confirmation-status status-confirmed';
-                    document.getElementById('confirmationStatus').textContent = '客戶已確認';
-                    document.getElementById('confirmButton').style.display = 'none';
-                    alert('報價單已確認！');
-                } else {
-                    throw new Error('確認失敗');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('確認報價單時發生錯誤');
-            }
+        function updateQuantity(index, value) {
+            services[index].quantity = parseInt(value) || 0;
+            renderServiceList();
+            updateTotal();
         }
 
         // 計算總金額
-        function calculateTotal() {
-            return defaultServices.reduce((total, service) => 
-                total + (service.price * service.quantity), 0);
+        function updateTotal() {
+            const total = services.reduce((sum, service) => 
+                sum + (service.price * service.quantity), 0);
+            document.getElementById('totalAmount').textContent = total;
+            return total;
         }
 
-        // 初始化
-        initializeLiff();
+        // 分享到 LINE
+        async function shareToLine() {
+            if (services.length === 0) {
+                alert('請至少新增一個保養項目');
+                return;
+            }
+
+            const carNumber = document.getElementById('carNumber').value;
+            if (!carNumber) {
+                alert('請填寫車牌號碼');
+                return;
+            }
+
+            try {
+                const flexMessage = generateFlexMessage();
+                
+                if (liff.isApiAvailable('shareTargetPicker')) {
+                    const result = await liff.shareTargetPicker([
+                        {
+                            type: "flex",
+                            altText: "汽車保養報價單",
+                            contents: flexMessage
+                        }
+                    ]);
+                    
+                    if (result) {
+                        alert('報價單已成功分享！');
+                    }
+                } else {
+                    alert('此裝置不支援分享功能');
+                }
+            } catch (error) {
+                console.error('分享失敗:', error);
+                alert('分享失敗，請稍後再試');
+            }
+        }
+
+        // 生成 Flex Message
+        function generateFlexMessage() {
+            const carNumber = document.getElementById('carNumber').value;
+            const customerName = document.getElementById('customerName').value;
+            const total = updateTotal();
+
+            // 生成服務項目內容
+            const serviceContents = services.map(service => ({
+                type: "box",
+                layout: "horizontal",
+                contents: [
+                    {
+                        type: "text",
+                        text: service.name,
+                        size: "sm",
+                        color: "#555555",
+                        flex: 4
+                    },
+                    {
+                        type: "text",
+                        text: `${service.quantity}`,
+                        size: "sm",
+                        color: "#111111",
+                        align: "end",
+                        flex: 1
+                    },
+                    {
+                        type: "text",
+                        text: `$${service.price * service.quantity}`,
+                        size: "sm",
+                        color: "#111111",
+                        align: "end",
+                        flex: 2
+                    }
+                ]
+            }));
+
+            return {
+                type: "bubble",
+                header: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "text",
+                            text: "汽車保養報價單",
+                            weight: "bold",
+                            size: "xl",
+                            color: "#ffffff"
+                        }
+                    ],
+                    backgroundColor: "#2D4B73",
+                    paddingAll: "20px"
+                },
+                body: {
+                    type: "box",
+                    layout: "vertical",
+                    contents: [
+                        {
+                            type: "box",
+                            layout: "vertical",
+                            margin: "lg",
+                            spacing: "sm",
+                            contents: [
+                                {
+                                    type: "box",
+                                    layout: "horizontal",
+                                    contents: [
+                                        {
+                                            type: "text",
+                                            text: "車牌號碼",
+                                            color: "#555555",
+                                            size: "sm",
+                                            flex: 2
+                                        },
+                                        {
+                                            type: "text",
+                                            text: carNumber,
+                                            size: "sm",
+                                            color: "#111111",
+                                            flex: 3
+                                        }
+                                    ]
+                                },
+                                {
+                                    type: "box",
+                                    layout: "horizontal",
+                                    contents: [
+                                        {
+                                            type: "text",
+                                            text: "客戶姓名",
+                                            color: "#555555",
+                                            size: "sm",
+                                            flex: 2
+                                        },
+                                        {
+                                            type: "text",
+                                            text: customerName || "未提供",
+                                            size: "sm",
+                                            color: "#111111",
+                                            flex: 3
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            type: "separator",
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "vertical",
+                            margin: "lg",
+                            spacing: "sm",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "保養項目",
+                                    weight: "bold",
+                                    size: "sm"
+                                },
+                                {
+                                    type: "box",
+                                    layout: "vertical",
+                                    spacing: "sm",
+                                    contents: serviceContents
+                                }
+                            ]
+                        },
+                        {
+                            type: "separator",
+                            margin: "lg"
+                        },
+                        {
+                            type: "box",
+                            layout: "horizontal",
+                            margin: "lg",
+                            contents: [
+                                {
+                                    type: "text",
+                                    text: "總計金額",
+                                    size: "sm",
+                                    color: "#555555",
+                                    flex: 2
+                                },
+                                {
+                                    type: "text",
+                                    text: `NT$${total}`,
+                                    size: "sm",
+                                    color: "#111111",
+                                    align: "end",
+                                    weight: "bold",
+                                    flex: 3
+                                }
+                            ]
+                        }
+                    ]
+                },
+                footer: {
+                    type: "box",
+                    layout: "vertical",
+                    spacing: "sm",
+                    contents: [
+                        {
+                            type: "button",
+                            action: {
+                                type: "uri",
+                                label: "確認報價",
+                                uri: `${window.location.origin}${window.location.pathname}?id=${quotationId}`
+                            },
+                            style: "primary"
+                        }
+                    ],
+                    flex: 0,
+                    paddingTop: "20px"
+                }
+            };
+        }
+
+        // 初始化頁面
+        window.onload = function() {
+            initializeLiff();
+        };
     </script>
 </body>
 </html>
