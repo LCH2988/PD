@@ -13,12 +13,27 @@
         }
         .service-item {
             margin: 10px 0;
-        }
-        #quotationResult {
-            margin-top: 20px;
-            padding: 20px;
+            padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
+        }
+        .quotation-card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .required::after {
+            content: '*';
+            color: red;
+            margin-left: 4px;
+        }
+        #serviceList {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        #quotationResult {
             display: none;
         }
     </style>
@@ -27,62 +42,93 @@
     <div class="container">
         <h2 class="text-center mb-4">汽車保養報價單</h2>
         
-        <div class="mb-3">
-            <label class="form-label">客戶姓名：</label>
-            <input type="text" class="form-control" id="customerName" readonly>
-        </div>
-
-        <div class="service-items">
-            <h4>保養項目</h4>
-            <div class="form-check service-item">
-                <input class="form-check-input" type="checkbox" value="1500" id="engineOil">
-                <label class="form-check-label" for="engineOil">
-                    機油更換 - NT$1,500
-                </label>
-            </div>
-            <div class="form-check service-item">
-                <input class="form-check-input" type="checkbox" value="800" id="oilFilter">
-                <label class="form-check-label" for="oilFilter">
-                    機油濾清器更換 - NT$800
-                </label>
-            </div>
-            <div class="form-check service-item">
-                <input class="form-check-input" type="checkbox" value="1200" id="airFilter">
-                <label class="form-check-label" for="airFilter">
-                    空氣濾清器更換 - NT$1,200
-                </label>
-            </div>
-            <div class="form-check service-item">
-                <input class="form-check-input" type="checkbox" value="2500" id="brakeService">
-                <label class="form-check-label" for="brakeService">
-                    煞車系統保養 - NT$2,500
-                </label>
+        <!-- 客戶資訊表單 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4>客戶建檔</h4>
+                <div class="mb-3">
+                    <label class="form-label">執行者：</label>
+                    <input type="text" class="form-control" id="lineName" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label required">車牌號碼：</label>
+                    <input type="text" class="form-control" id="carNumber" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">客戶姓名：</label>
+                    <input type="text" class="form-control" id="customerName">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">手機號碼：</label>
+                    <input type="tel" class="form-control" id="phoneNumber">
+                </div>
             </div>
         </div>
 
-        <button class="btn btn-primary mt-3" onclick="calculateQuotation()">產生報價單</button>
-
-        <div id="quotationResult">
-            <h4>報價單明細</h4>
-            <div id="serviceList"></div>
-            <hr>
-            <div class="d-flex justify-content-between">
-                <strong>總金額：</strong>
-                <span id="totalAmount"></span>
+        <!-- 服務項目列表 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4>保養項目</h4>
+                <div id="serviceList">
+                    <!-- 動態生成的服務項目會在這裡 -->
+                </div>
+                <button class="btn btn-secondary mt-3" onclick="addNewService()">新增項目</button>
             </div>
-            <div class="mt-3">
+        </div>
+
+        <button class="btn btn-primary" onclick="generateQuotation()">產生報價單</button>
+
+        <!-- 報價單結果 -->
+        <div id="quotationResult" class="quotation-card">
+            <h3 class="text-center mb-4">報價單</h3>
+            
+            <div class="customer-info mb-4">
+                <p><strong>車牌號碼：</strong><span id="result-carNumber"></span></p>
+                <p><strong>客戶姓名：</strong><span id="result-customerName"></span></p>
+                <p><strong>聯絡電話：</strong><span id="result-phoneNumber"></span></p>
+                <p><strong>報價日期：</strong><span id="result-date"></span></p>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>項目</th>
+                            <th>數量</th>
+                            <th>單價</th>
+                            <th>小計</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-serviceList"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>總計：</strong></td>
+                            <td id="result-totalAmount"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div class="bank-info mt-4">
                 <h5>匯款資訊</h5>
                 <p>銀行：國泰世華銀行<br>
                    帳號：1234-5678-9012-3456<br>
                    戶名：汽車保養中心</p>
             </div>
-            <button class="btn btn-success mt-3" onclick="confirmQuotation()">確認報價單</button>
+
+            <button class="btn btn-success w-100 mt-3" onclick="confirmQuotation()">確認報價單</button>
         </div>
     </div>
 
     <script>
         let userId = '';
         let userName = '';
+        const defaultServices = [
+            { name: '機油更換', price: 1500 },
+            { name: '機油濾清器更換', price: 800 },
+            { name: '空氣濾清器更換', price: 1200 },
+            { name: '煞車系統保養', price: 2500 }
+        ];
 
         // 初始化 LIFF
         async function initializeLiff() {
@@ -92,51 +138,132 @@
                     const profile = await liff.getProfile();
                     userId = profile.userId;
                     userName = profile.displayName;
-                    document.getElementById('customerName').value = userName;
+                    document.getElementById('lineName').value = userName;
                 } else {
                     liff.login();
                 }
             } catch (err) {
                 console.error('LIFF 初始化失敗', err);
             }
+            renderServiceList();
         }
 
-        // 計算報價單
-        function calculateQuotation() {
-            let total = 0;
-            let serviceListHtml = '';
-            const services = document.querySelectorAll('.service-item input:checked');
-            
-            services.forEach(service => {
-                const amount = parseInt(service.value);
-                const serviceName = service.nextElementSibling.textContent.split('-')[0].trim();
-                total += amount;
-                serviceListHtml += `<div class="d-flex justify-content-between">
-                    <span>${serviceName}</span>
-                    <span>NT$${amount}</span>
-                </div>`;
-            });
+        // 渲染服務項目列表
+        function renderServiceList() {
+            const container = document.getElementById('serviceList');
+            container.innerHTML = defaultServices.map((service, index) => `
+                <div class="service-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" value="${service.name}" 
+                                   onchange="updateServiceName(${index}, this.value)">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" value="${service.price}"
+                                   onchange="updateServicePrice(${index}, this.value)">
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" value="0" min="0"
+                                   onchange="updateServiceQuantity(${index}, this.value)">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-danger btn-sm" onclick="removeService(${index})">刪除</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
 
-            document.getElementById('serviceList').innerHTML = serviceListHtml;
-            document.getElementById('totalAmount').textContent = `NT$${total}`;
+        // 新增服務項目
+        function addNewService() {
+            defaultServices.push({ name: '新項目', price: 0 });
+            renderServiceList();
+        }
+
+        // 更新服務名稱
+        function updateServiceName(index, value) {
+            defaultServices[index].name = value;
+        }
+
+        // 更新服務價格
+        function updateServicePrice(index, value) {
+            defaultServices[index].price = parseInt(value) || 0;
+        }
+
+        // 更新服務數量
+        function updateServiceQuantity(index, value) {
+            defaultServices[index].quantity = parseInt(value) || 0;
+        }
+
+        // 移除服務項目
+        function removeService(index) {
+            defaultServices.splice(index, 1);
+            renderServiceList();
+        }
+
+        // 產生報價單
+        function generateQuotation() {
+            const carNumber = document.getElementById('carNumber').value;
+            if (!carNumber) {
+                alert('請輸入車牌號碼！');
+                return;
+            }
+
+            const customerName = document.getElementById('customerName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+
+            // 計算總金額和產生服務列表
+            let totalAmount = 0;
+            const serviceListHtml = defaultServices
+                .filter(service => service.quantity > 0)
+                .map(service => {
+                    const subtotal = service.price * service.quantity;
+                    totalAmount += subtotal;
+                    return `
+                        <tr>
+                            <td>${service.name}</td>
+                            <td>${service.quantity}</td>
+                            <td>${service.price}</td>
+                            <td>${subtotal}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            // 顯示報價單
+            document.getElementById('result-carNumber').textContent = carNumber;
+            document.getElementById('result-customerName').textContent = customerName || '未提供';
+            document.getElementById('result-phoneNumber').textContent = phoneNumber || '未提供';
+            document.getElementById('result-date').textContent = new Date().toLocaleDateString();
+            document.getElementById('result-serviceList').innerHTML = serviceListHtml;
+            document.getElementById('result-totalAmount').textContent = `NT$${totalAmount}`;
             document.getElementById('quotationResult').style.display = 'block';
         }
 
         // 確認報價單
         async function confirmQuotation() {
-            const services = Array.from(document.querySelectorAll('.service-item input:checked'))
+            const carNumber = document.getElementById('carNumber').value;
+            const customerName = document.getElementById('customerName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+
+            const services = defaultServices
+                .filter(service => service.quantity > 0)
                 .map(service => ({
-                    name: service.nextElementSibling.textContent.split('-')[0].trim(),
-                    price: parseInt(service.value)
+                    name: service.name,
+                    price: service.price,
+                    quantity: service.quantity,
+                    subtotal: service.price * service.quantity
                 }));
 
-            const totalAmount = services.reduce((sum, service) => sum + service.price, 0);
+            const totalAmount = services.reduce((sum, service) => sum + service.subtotal, 0);
 
             // 呼叫 Google Apps Script
-            const gasUrl = 'https://script.google.com/macros/s/AKfycbwJUgimmSw01L6Ut8CfyoPVp856idFPt6woqhlpqcsqAvWu2QI8Bw2c-Bv6hv3z_k7R/exec';
+            const gasUrl = 'https://script.google.com/macros/s/AKfycbzkwHlcWSTAJzx0EzEJ8yoVJ641agYdOSEgIsuiT5jA2npjGDwG73svBKWKHFJ35qT0/exec';
             const data = {
                 userId: userId,
-                customerName: userName,
+                lineName: userName,
+                carNumber: carNumber,
+                customerName: customerName,
+                phoneNumber: phoneNumber,
                 services: services,
                 totalAmount: totalAmount,
                 timestamp: new Date().toISOString()
@@ -150,7 +277,6 @@
 
                 if (response.ok) {
                     alert('報價單已確認並儲存！');
-                    // 可以選擇關閉 LIFF 視窗
                     liff.closeWindow();
                 } else {
                     throw new Error('儲存失敗');
